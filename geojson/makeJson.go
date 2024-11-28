@@ -95,11 +95,15 @@ func FeatureFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data strin
 
 type fcShell[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Typ GeoType `json:"type"`
-    FeatureCollection[G] `json:"features"`
+    features []fShell[G] `json:"features"`
 }
 
 func (fc FeatureCollection[G]) ToJSON() (string, error) {
-    shell := fcShell[G]{FeatureCollectionT, fc}
+    features := make([]fShell[G], 0, len(fc))
+    for _, v := range fc {
+        features = append(features, fShell[G]{FeatureT, v.Geometry, v.Props})
+    }
+    shell := fcShell[G]{FeatureCollectionT, features}
     out, err := json.Marshal(shell)
     if err != nil {
         return "", err
@@ -114,5 +118,9 @@ func FeatureCollFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data s
     if err != nil {
         return nil, err
     }
-    return shell.FeatureCollection, nil
+    FeatureColl := make([]Feature[G], 0, len(shell.features))
+    for _, v := range shell.features {
+        FeatureColl = append(FeatureColl, Feature[G]{v.Geometry, v.Props})
+    }
+    return FeatureColl, nil
 }

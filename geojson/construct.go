@@ -11,23 +11,23 @@ func CreateCoordinate(long, lat float64) Coordinate {
 
 
 // Creates a point
-func CreatePoint(point Coordinate) Geometry {
-    return Geometry{PointT, []Coordinate{point}}
+func CreatePoint(point Coordinate) FlatGeometry {
+    return FlatGeometry{PointT, point}
 }
 
 // Creates a group of points
-func CreateMultiPoint(points ...Geometry) (MultiGeometry, error) {
+func CreateMultiPoint(points ...FlatGeometry) (Geometry, error) {
     if len(points) == 0 {
-        return *new(MultiGeometry), errors.New("too few points")
+        return *new(Geometry), errors.New("too few points")
     }
-    temp := make([][]Coordinate, len(points))
+    temp := make([]Coordinate, len(points))
     for _, v := range points {
         if v.GeometryType != PointT {
-            return *new(MultiGeometry), errors.New("it's not all points")
+            return *new(Geometry), errors.New("it's not all points")
         }
-        temp = append(temp, v.Coords)
+        temp = append(temp, v.SingleCoords)
     }
-    return MultiGeometry{MultiPointT, temp}, nil
+    return Geometry{MultiPointT, temp}, nil
 }
 
 

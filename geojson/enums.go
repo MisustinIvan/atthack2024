@@ -37,6 +37,11 @@ type IJSONable interface {
 // Coordinates in format: longtitude, latitude
 type Coordinate [2]float64
 
+type FlatGeometry struct {
+    GeometryType `json:"type"`
+    SingleCoords  Coordinate `json:"coordinates"`
+}
+
 // Single geometry struct
 type Geometry struct {
     GeometryType `json:"type"`
@@ -50,8 +55,8 @@ type MultiGeometry struct {
 }
 
 type MultiMultiGeometry struct {
-	GeometryType `json:"type"`
-	CoordsSetsSets [][][]Coordinate `json:"coordinates"`
+    GeometryType `json:"type"`
+    CoordsSetsSets [][][]Coordinate `json:"coordinates"`
 }
 
 // Collection of geometries
