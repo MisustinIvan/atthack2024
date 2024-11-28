@@ -31,31 +31,16 @@ func NewDAO(db *sql.DB) SQLiteDAO {
 
 func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
     paths, points := conv.GoOverGraph(graph)
-    var e error
 
     // Extract nodes
-    pointArgs := make([]conv.GeoNode, 0, len(points))
-    var lastN conv.GeoNode
-    for _, v := range points {
-        lastN, e = conv.PointToGeoNode(v)
-        if e == nil {
-            pointArgs = append(pointArgs, lastN)
-        }
-    }
+    pointArgs := conv.PointsCollToGeoNode(points)
     // Do the thingy
     if err := dao.StoreGeoNodes(pointArgs...); err != nil {
         return err
     }
 
     // Extract paths
-    pathsArgs := make([]conv.GeoPath, 0, len(paths))
-    var lastP conv.GeoPath
-    for _, v := range paths {
-        lastP, e = conv.LineStringToGeoPath(v)
-        if e == nil {
-            pathsArgs = append(pathsArgs, lastP)
-        }
-    }
+    pathsArgs := conv.LineCollToGeoPath(paths)
     // Do the thingy
     if err := dao.StoreGeoPaths(pathsArgs...); err != nil {
         return err

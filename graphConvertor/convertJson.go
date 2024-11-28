@@ -68,6 +68,29 @@ func (g GeoNode) ToPoint() gj.Feature[gj.Geometry] {
     return gj.WrapFeature(point, map[string]any{"id":g.Id})
 }
 
+func PointsCollToGeoNode(collOfPoints gj.FeatureCollection[gj.Geometry]) []GeoNode {
+    points := make([]GeoNode, 0, len(collOfPoints))
+    var (
+        lastN GeoNode
+        e error
+    )
+    for _, v := range collOfPoints {
+        lastN, e = PointToGeoNode(v)
+        if e == nil {
+            points = append(points, lastN)
+        }
+    }
+    return points
+}
+
+func GeoNodesToPointsColl(nodes ...GeoNode) gj.FeatureCollection[gj.Geometry] {
+    points := make([]gj.Feature[gj.Geometry], 0, len(nodes))
+    for _, v := range nodes {
+        points = append(points, v.ToPoint())
+    }
+    return points
+}
+
 
 type GeoPath struct {
     Ends [2]gj.Coordinate   `json:"coordinates"`
@@ -113,4 +136,27 @@ func LineStringToGeoPath(line gj.Feature[gj.Geometry]) (GeoPath, error) {
 func (g GeoPath) ToLineString() gj.Feature[gj.Geometry] {
     line, _ := gj.CreateLineString(g.Ends[0], g.Ends[1])
     return gj.WrapFeature(line, map[string]any{"state": g.State, "size": g.Size, "cars": g.Cars})
+}
+
+func LineCollToGeoPath(collOfLines gj.FeatureCollection[gj.Geometry]) []GeoPath {
+    paths := make([]GeoPath, 0, len(collOfLines))
+    var (
+        lastP GeoPath
+        e error
+    )
+    for _, v := range collOfLines {
+        lastP, e = LineStringToGeoPath(v)
+        if e == nil {
+            paths = append(paths, lastP)
+        }
+    }
+    return paths
+}
+
+func GeoPathsToLineColl(paths ...GeoPath) gj.FeatureCollection[gj.Geometry] {
+    lines := make([]gj.Feature[gj.Geometry], 0, len(paths))
+    for _, v := range paths {
+        lines = append(lines, v.ToLineString())
+    }
+    return lines
 }
