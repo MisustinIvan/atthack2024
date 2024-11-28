@@ -6,11 +6,14 @@ type GeometryType GeoType
 
 const (
     PointT              GeometryType = "Point"
-    MultiPointT         GeometryType = "MultiPoint"
     LineStringT         GeometryType = "LineString"
+    PolygonT            GeometryType = "Polygon"
+)
+
+const (
+    MultiPointT         GeometryType = "MultiPoint"
     MultiLineStringT    GeometryType = "MultiLineString"
     MultiPolygonT       GeometryType = "MultiPolygon"
-    PolygonT            GeometryType = "Polygon"
     GeometryCollectionT GeometryType = "GeometryCollection"
 )
 
@@ -23,18 +26,23 @@ type IJSONable interface {
     ToJSON() (string, error)
 }
 
-type GeometryCollection []Geometry
-
-type FeatureCollection []Feature
-
-type Feature struct {
-    Geometry `json:"geometry"`
-    Props    map[string]any `json:"properties"`
-}
+type Coordinate [2]float64
 
 type Geometry struct {
     GeometryType `json:"type"`
     Coords  []Coordinate `json:"coordinates"`
 }
 
-type Coordinate [2]float64
+type MultiGeometry struct {
+    GeometryType `json:"type"`
+    CoordsSets [][]Coordinate `json:"coordinates"`
+}
+
+type GeometryCollection[G Geometry | MultiGeometry] []G
+
+type Feature[G Geometry | MultiGeometry] struct {
+    Geometry G `json:"geometry"`
+    Props    map[string]any `json:"properties"`
+}
+
+type FeatureCollection[G Geometry | MultiGeometry] []Feature[G]
