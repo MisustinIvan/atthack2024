@@ -2,7 +2,6 @@ package graphdb
 
 import (
 	"database/sql"
-	"errors"
 	gj "optitraffic/geojson"
 	conv "optitraffic/graphConvertor"
 	"optitraffic/node"
@@ -24,6 +23,10 @@ type GraphDAO interface {
 
 type SQLiteDAO struct {
     db *sql.DB
+}
+
+func NewDAO(db *sql.DB) SQLiteDAO {
+    return SQLiteDAO{db}
 }
 
 func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
@@ -69,7 +72,7 @@ func (dao *SQLiteDAO) StoreGeoNodes(nodes ...conv.GeoNode) error {
         pointQuery += "(?,?,?),\r\n"
     }
     if len := len(pointQuery); len > orgLn {
-        pointQuery = pointQuery[:len-2]
+        pointQuery = pointQuery[:len-3]
     }
     // prepare data
     pointDeconstruct := make([]any, 0, len(nodes)*3)
@@ -95,7 +98,7 @@ func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
         pathDataQuery += "(?,?,?),\r\n"
     }
     if qLen := len(pathDataQuery); qLen > argLen {
-        pathDataQuery = pathDataQuery[:qLen-2]
+        pathDataQuery = pathDataQuery[:qLen-3]
     }
     // prepare data data
     pathDataDecons := make([]any, 0, argLen*3)
@@ -110,26 +113,19 @@ func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
 
     // prepare coordinates query
     pathCoordQuery := "INSERT INTO path_ends (parent_id, longitude, latitude) VALUES\r\n"
-    for i := 0; i < argLen; i++ {
+    coordLen := argLen*2
+    for i := 0; i < coordLen; i++ {
         pathCoordQuery += "(?,?,?),\r\n"
     }
-    if qLen := len(pathCoordQuery); qLen > argLen {
-        pathCoordQuery = pathCoordQuery[:qLen-2]
+    if qLen := len(pathCoordQuery); qLen > coordLen {
+        pathCoordQuery = pathCoordQuery[:qLen-3]
     }
     // prepare coordinates data
-    pathTuples := make([]any, 0, argLen*2)
-    lastID++
-    u := 0
+    pathTuples := make([]any, 0, coordLen)
     for _, v := range paths {
-        if u > 0 {
-            lastID++
-            u = 0
-        }
-        pathTuples = append(pathTuples, lastID, v.Ends[0], v.Ends[1])
-        u++
-    }
-    if !(u > 0) {
-        return errors.New("neco se posralo")
+        lastID++
+        pathTuples = append(pathTuples, lastID, v.Ends[0][0], v.Ends[0][1])
+        pathTuples = append(pathTuples, lastID, v.Ends[1][0], v.Ends[1][1])
     }
     // execute coordinates query
     _, err = dao.db.Exec(pathCoordQuery, pathTuples...)
