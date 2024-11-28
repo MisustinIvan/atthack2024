@@ -56,40 +56,40 @@ func CreateMultiLineString(lineStrings ...Geometry) (MultiGeometry, error) {
 
 
 // Creates lines that connect into a polygon
-func CreatePolygon(verticies ...Coordinate) (Geometry, error) {
+func CreatePolygon(verticies ...Coordinate) (MultiGeometry, error) {
     if len(verticies) < 4 {
-        return *new(Geometry), errors.New("a polygon has at least three verticies")
+        return *new(MultiGeometry), errors.New("a polygon has at least three verticies")
     }
     if verticies[0] != verticies[len(verticies)-1] {
-        return *new(Geometry), errors.New("the first and last vertex must be the same")
+        return *new(MultiGeometry), errors.New("the first and last vertex must be the same")
     }
-    return Geometry{PolygonT, verticies}, nil
+    return MultiGeometry{PolygonT, [][]Coordinate{verticies}}, nil
 }
 
 // Creates a group of polygons
-func CreateMultiPolygon(polygons ...Geometry) (MultiGeometry, error) {
+func CreateMultiPolygon(polygons ...MultiGeometry) (MultiMultiGeometry, error) {
     if len(polygons) == 0 {
-        return *new(MultiGeometry), errors.New("nuh uh")
+        return *new(MultiMultiGeometry), errors.New("nuh uh")
     }
-    all := make([][]Coordinate, len(polygons))
+    all := make([][][]Coordinate, len(polygons))
     for _, v := range polygons {
         if v.GeometryType != PolygonT {
-            return *new(MultiGeometry), errors.New("polygons must be polygons")
+            return *new(MultiMultiGeometry), errors.New("polygons must be polygons")
         }
-        all = append(all, v.Coords)
+        all = append(all, v.CoordsSets)
     }
-    return MultiGeometry{MultiPolygonT, all}, nil
+    return MultiMultiGeometry{MultiPolygonT, all}, nil
 }
 
 
 // Creates a collection of same-type different geometric kinds
-func CreateGeometryColl[G Geometry | MultiGeometry](geometries ...G) GeometryCollection[G] {
+func CreateGeometryColl[G Geometry | MultiGeometry | MultiMultiGeometry](geometries ...G) GeometryCollection[G] {
     return geometries
 }
 
 
 // Wraps a geometric type as a Feature
-func WrapFeature[G Geometry | MultiGeometry](geometry G, props map[string]any) Feature[G] {
+func WrapFeature[G Geometry | MultiGeometry | MultiMultiGeometry](geometry G, props map[string]any) Feature[G] {
     var temp map[string]any
     if props != nil {
         temp = make(map[string]any, len(props))
@@ -102,6 +102,6 @@ func WrapFeature[G Geometry | MultiGeometry](geometry G, props map[string]any) F
 
 
 // Creates a collection of different features with the same underlying geometric type
-func CreateFeatureColl[G Geometry | MultiGeometry](features ...Feature[G]) FeatureCollection[G] {
+func CreateFeatureColl[G Geometry | MultiGeometry | MultiMultiGeometry](features ...Feature[G]) FeatureCollection[G] {
     return features
 }

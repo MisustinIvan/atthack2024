@@ -49,14 +49,19 @@ type MultiGeometry struct {
     CoordsSets [][]Coordinate `json:"coordinates"`
 }
 
+type MultiMultiGeometry struct {
+	GeometryType `json:"type"`
+	CoordsSetsSets [][][]Coordinate `json:"coordinates"`
+}
+
 // Collection of geometries
-type GeometryCollection[G Geometry | MultiGeometry] []G
+type GeometryCollection[G Geometry | MultiGeometry | MultiMultiGeometry] []G
 
 // A wrapper around a geometry type
-type Feature[G Geometry | MultiGeometry] struct {
+type Feature[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Geometry G `json:"geometry"`
     Props    map[string]any `json:"properties"`
 }
 
 // Collection of geometries
-type FeatureCollection[G Geometry | MultiGeometry] []Feature[G]
+type FeatureCollection[G Geometry | MultiGeometry | MultiMultiGeometry] []Feature[G]
