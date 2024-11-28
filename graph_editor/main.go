@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"optitraffic/templates"
 
 	"github.com/gofiber/fiber/v2"
@@ -38,6 +39,7 @@ func main() {
 	})
 
 	app.Post("/save_geojson", func(c *fiber.Ctx) error {
+		fmt.Printf("string(c.Body()): %v\n", string(c.Body()))
 		return c.SendStatus(fiber.StatusOK)
 	})
 

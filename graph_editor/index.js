@@ -4,6 +4,8 @@ const Status = {
 	CREATING_ROOT: "creating_root",
 };
 
+const MARKER_RADIUS = 8;
+
 let app_state = {
 	status: Status.NOT_CREATING,
 	map: {},
@@ -143,7 +145,7 @@ const evToPoint = (ev) => {
  */
 const pointToLayer = (point, latlng) => {
 	const marker = L.circleMarker(latlng, {
-		radius: 8,
+		radius: MARKER_RADIUS,
 		color: "blue",
 		weight: 2,
 		fillColor: "blue",
