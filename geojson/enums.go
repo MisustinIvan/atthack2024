@@ -60,13 +60,13 @@ type MultiMultiGeometry struct {
 }
 
 // Collection of geometries
-type GeometryCollection[G Geometry | MultiGeometry | MultiMultiGeometry] []G
+type GeometryCollection[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] []G
 
 // A wrapper around a geometry type
-type Feature[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
+type Feature[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Geometry G `json:"geometry"`
     Props    map[string]any `json:"properties"`
 }
 
 // Collection of geometries
-type FeatureCollection[G Geometry | MultiGeometry | MultiMultiGeometry] []Feature[G]
+type FeatureCollection[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] []Feature[G]

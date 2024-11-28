@@ -42,7 +42,7 @@ func MultiGeometryFromJSON(data string) (MultiGeometry, error) {
 }
 
 
-type gcShell[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
+type gcShell[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Typ GeoType `json:"type"`
     GeometryCollection[G] `json:"geometries"`
 }
@@ -57,7 +57,7 @@ func (gc GeometryCollection[G]) ToJSON() (string, error) {
 }
 
 // Creates a collection geometry from JSON input
-func GeometryCollFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data string) (GeometryCollection[G], error) {
+func GeometryCollFromJSON[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](data string) (GeometryCollection[G], error) {
     var shell gcShell[G]
     err := json.Unmarshal([]byte(data), &shell)
     if err != nil {
@@ -67,7 +67,7 @@ func GeometryCollFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data 
 }
 
 
-type fShell[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
+type fShell[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Typ GeoType `json:"type"`
     Geometry G `json:"geometry"`
     Props map[string]any `json:"properties"`
@@ -83,7 +83,7 @@ func (f Feature[G]) ToJSON() (string, error) {
 }
 
 // Creates a feature of the geometry type from JSON input
-func FeatureFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data string) (Feature[G], error) {
+func FeatureFromJSON[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](data string) (Feature[G], error) {
     var shell fShell[G]
     err := json.Unmarshal([]byte(data), &shell)
     if err != nil {
@@ -93,9 +93,9 @@ func FeatureFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data strin
 }
 
 
-type fcShell[G Geometry | MultiGeometry | MultiMultiGeometry] struct {
+type fcShell[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry] struct {
     Typ GeoType `json:"type"`
-    features []fShell[G] `json:"features"`
+    Features []fShell[G] `json:"features"`
 }
 
 func (fc FeatureCollection[G]) ToJSON() (string, error) {
@@ -112,14 +112,14 @@ func (fc FeatureCollection[G]) ToJSON() (string, error) {
 }
 
 // Creates a collection of features of the geometry type from JSON input
-func FeatureCollFromJSON[G Geometry | MultiGeometry | MultiMultiGeometry](data string) (FeatureCollection[G], error) {
+func FeatureCollFromJSON[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](data string) (FeatureCollection[G], error) {
     var shell fcShell[G]
     err := json.Unmarshal([]byte(data), &shell)
     if err != nil {
         return nil, err
     }
-    FeatureColl := make([]Feature[G], 0, len(shell.features))
-    for _, v := range shell.features {
+    FeatureColl := make([]Feature[G], 0, len(shell.Features))
+    for _, v := range shell.Features {
         FeatureColl = append(FeatureColl, Feature[G]{v.Geometry, v.Props})
     }
     return FeatureColl, nil

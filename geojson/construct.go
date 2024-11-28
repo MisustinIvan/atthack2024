@@ -83,13 +83,13 @@ func CreateMultiPolygon(polygons ...MultiGeometry) (MultiMultiGeometry, error) {
 
 
 // Creates a collection of same-type different geometric kinds
-func CreateGeometryColl[G Geometry | MultiGeometry | MultiMultiGeometry](geometries ...G) GeometryCollection[G] {
+func CreateGeometryColl[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](geometries ...G) GeometryCollection[G] {
     return geometries
 }
 
 
 // Wraps a geometric type as a Feature
-func WrapFeature[G Geometry | MultiGeometry | MultiMultiGeometry](geometry G, props map[string]any) Feature[G] {
+func WrapFeature[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](geometry G, props map[string]any) Feature[G] {
     var temp map[string]any
     if props != nil {
         temp = make(map[string]any, len(props))
@@ -102,6 +102,6 @@ func WrapFeature[G Geometry | MultiGeometry | MultiMultiGeometry](geometry G, pr
 
 
 // Creates a collection of different features with the same underlying geometric type
-func CreateFeatureColl[G Geometry | MultiGeometry | MultiMultiGeometry](features ...Feature[G]) FeatureCollection[G] {
+func CreateFeatureColl[G FlatGeometry | Geometry | MultiGeometry | MultiMultiGeometry](features ...Feature[G]) FeatureCollection[G] {
     return features
 }
