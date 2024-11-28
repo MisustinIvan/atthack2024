@@ -1,0 +1,91 @@
+package dao
+
+import (
+	"database/sql"
+	_ "github.com/mattn/go-sqlite3"
+	lobbio "main/refactor/lobbio/types"
+)
+
+type UserDAO interface {
+	GetByID(id string) (*lobbio.User, error)
+	GetAll() ([]lobbio.User, error)
+	Create(user *lobbio.User) (*lobbio.User, error)
+	Update(user *lobbio.User) (*lobbio.User, error)
+	Delete(id string) error
+}
+
+type SQLiteUserDAO struct {
+	db *sql.DB
+}
+
+// GetByID(id string) (*lobbio.User, error)
+func (dao *SQLiteUserDAO) GetByID(id string) (*lobbio.User, error) {
+	var user lobbio.User
+
+	query := "SELECT id, name FROM users where id = ?"
+	row := dao.db.QueryRow(query, id)
+
+	if err := row.Scan(&user.Id, &user.Name); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+// GetAll() ([]lobbio.User, error)
+func (dao *SQLiteUserDAO) GetAll() ([]lobbio.User, error) {
+	var users []lobbio.User
+
+	query := "SELECT id, name FROM users"
+	rows, err := dao.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var user lobbio.User
+		if err := rows.Scan(&user.Id, &user.Name); err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+// Create(user *lobbio.User) (*lobbio.User, error)
+func (dao *SQLiteUserDAO) Create(user *lobbio.User) (*lobbio.User, error) {
+	query := "INSERT INTO users (id, name) VALUES (?, ?)"
+	_, err := dao.db.Exec(query, user.Id, user.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// Update(user *lobbio.User) (*lobbio.User, error)
+func (dao *SQLiteUserDAO) Update(user *lobbio.User) (*lobbio.User, error) {
+	query := "UPDATE users SET name = ? WHERE id = ?"
+	_, err := dao.db.Exec(query, user.Name, user.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// Delete(id string) error
+func (dao *SQLiteUserDAO) Delete(id string) error {
+	query := "DELETE FROM users WHERE id = ?"
+	_, err := dao.db.Exec(query, id)
+	return err
+}
