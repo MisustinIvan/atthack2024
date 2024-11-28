@@ -2,6 +2,7 @@ package graphdb
 
 import (
 	"database/sql"
+	"errors"
 	gj "optitraffic/geojson"
 	conv "optitraffic/graphConvertor"
 	"optitraffic/node"
@@ -12,15 +13,129 @@ import (
 type GraphDAO interface {
     GetAllPoints() gj.FeatureCollection[gj.Geometry]
     GetAllNodes() []node.Node
-    GetNodeById(id int) ([]node.Node, error)
+    GetNodeById(id int) (node.Node, error)
     GetAllPaths() gj.FeatureCollection[gj.Geometry]
+    GetGraph() (paths, points gj.FeatureCollection[gj.Geometry])
 
-    StoreNodes([]*node.Node) error
     StoreGraph(node.Graph) error
-    StoreGeoNodes(...conv.GeoNode)error
+    StoreGeoNodes(...conv.GeoNode) error
     StoreGeoPaths(...conv.GeoPath) error
 }
 
 type SQLiteDAO struct {
     db *sql.DB
+}
+
+func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
+    paths, points := conv.GoOverGraph(graph)
+    var e error
+
+    // Extract nodes
+    pointArgs := make([]conv.GeoNode, 0, len(points))
+    var lastN conv.GeoNode
+    for _, v := range points {
+        lastN, e = conv.PointToGeoNode(v)
+        if e == nil {
+            pointArgs = append(pointArgs, lastN)
+        }
+    }
+    // Do the thingy
+    if err := dao.StoreGeoNodes(pointArgs...); err != nil {
+        return err
+    }
+
+    // Extract paths
+    pathsArgs := make([]conv.GeoPath, 0, len(paths))
+    var lastP conv.GeoPath
+    for _, v := range paths {
+        lastP, e = conv.LineStringToGeoPath(v)
+        if e == nil {
+            pathsArgs = append(pathsArgs, lastP)
+        }
+    }
+    // Do the thingy
+    if err := dao.StoreGeoPaths(pathsArgs...); err != nil {
+        return err
+    }
+
+    return nil
+}
+
+func (dao *SQLiteDAO) StoreGeoNodes(nodes ...conv.GeoNode) error {
+    // build query
+    pointQuery := "INSERT INTO graph_nodes (id, longitude, latitude) VALUES\r\n"
+    orgLn := len(pointQuery)
+    for i := 0; i < len(nodes); i++ {
+        pointQuery += "(?,?,?),\r\n"
+    }
+    if len := len(pointQuery); len > orgLn {
+        pointQuery = pointQuery[:len-2]
+    }
+    // prepare data
+    pointDeconstruct := make([]any, 0, len(nodes)*3)
+    for _, v := range nodes {
+        pointDeconstruct = append(pointDeconstruct, v.Id, v.Coordinate[0], v.Coordinate[1])
+    }
+    // execute query
+    _, err := dao.db.Exec(pointQuery, pointDeconstruct...)
+    return err
+}
+
+func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
+    // get last id (to assign coords)
+    lastRow := dao.db.QueryRow("SELECT id FROM graph_paths ORDER BY id DESC")
+    var lastID int
+    if err := lastRow.Scan(&lastID); err != nil {
+        lastID = 0
+    }
+    // prepare data query
+    pathDataQuery := "INSERT INTO graph_paths (state, size, cars) VALUES\r\n"
+    argLen := len(paths)
+    for i := 0; i < argLen; i++ {
+        pathDataQuery += "(?,?,?),\r\n"
+    }
+    if qLen := len(pathDataQuery); qLen > argLen {
+        pathDataQuery = pathDataQuery[:qLen-2]
+    }
+    // prepare data data
+    pathDataDecons := make([]any, 0, argLen*3)
+    for _, v := range paths {
+        pathDataDecons = append(pathDataDecons, v.State, v.Size, v.Cars)
+    }
+    // execute data query
+    _, err := dao.db.Exec(pathDataQuery, pathDataDecons...)
+    if err != nil {
+        return err
+    }
+
+    // prepare coordinates query
+    pathCoordQuery := "INSERT INTO path_ends (parent_id, longitude, latitude) VALUES\r\n"
+    for i := 0; i < argLen; i++ {
+        pathCoordQuery += "(?,?,?),\r\n"
+    }
+    if qLen := len(pathCoordQuery); qLen > argLen {
+        pathCoordQuery = pathCoordQuery[:qLen-2]
+    }
+    // prepare coordinates data
+    pathTuples := make([]any, 0, argLen*2)
+    lastID++
+    u := 0
+    for _, v := range paths {
+        if u > 0 {
+            lastID++
+            u = 0
+        }
+        pathTuples = append(pathTuples, lastID, v.Ends[0], v.Ends[1])
+        u++
+    }
+    if !(u > 0) {
+        return errors.New("neco se posralo")
+    }
+    // execute coordinates query
+    _, err = dao.db.Exec(pathCoordQuery, pathTuples...)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
