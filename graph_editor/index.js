@@ -75,12 +75,31 @@ let undo = (_) => {
 	render(app_state.map, app_state.graph);
 };
 
+let to_save_format = (graph) => {
+	let points = [];
+	let lines = [];
+
+	for (let feature of graph.features) {
+		if (feature.geometry.type == "Point") {
+			points.push(feature);
+		}
+		if (feature.geometry.type == "LineString") {
+			lines.push(feature);
+		}
+	}
+
+	return [
+		{ type: "FeatureCollection", features: points },
+		{ type: "FeatureCollection", feature: lines },
+	];
+};
+
 let save = (_) => {
 	console.log("saving");
 	console.log(app_state.graph);
 	fetch("/save_geojson", {
 		method: "POST",
-		body: JSON.stringify(app_state.graph),
+		body: JSON.stringify(to_save_format(app_state.graph)),
 	});
 };
 
