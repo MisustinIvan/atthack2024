@@ -15,7 +15,7 @@ func (t *Templates) Render(name string, data any, c *fiber.Ctx) error {
 	return t.templates.ExecuteTemplate(c.Response().BodyWriter(), name, data)
 }
 
-func newTemplates() *Templates {
+func NewTemplates() *Templates {
 	return &Templates{
 		templates: template.Must(template.ParseGlob("*.html")),
 	}
