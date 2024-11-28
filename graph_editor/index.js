@@ -150,7 +150,15 @@ const pointToLayer = (point, latlng) => {
 		fillOpacity: 0.5,
 	});
 
-	marker.on("click", (_) => {});
+	marker.on("click", (_) => {
+		app_state.edges.push([
+			app_state.from_point,
+			point.geometry.coordinates,
+		]);
+		app_state.graph = dataToGeoJSON(app_state.points, app_state.edges);
+		app_state.from_point = point.geometry.coordinates;
+		render(app_state.map, app_state.graph);
+	});
 
 	marker.on("contextmenu", (_) => {
 		console.log("Selected node");
