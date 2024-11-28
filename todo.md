@@ -2,8 +2,8 @@
 
 ## Nody
 
-- [ ] GeoJSON
-- [ ] Spojeni s nodou +stav spojeni(semtamfor)
+- [x] GeoJSON
+- [x] Spojeni s nodou +stav spojeni(semtamfor)
 - [ ] Vytizeni spojeni( jak moc cervene to bude vybarveny)
 - [x] Pocet pruhu / kvalita
 
@@ -20,8 +20,7 @@
 
 ## Pseoudorealny data
 
-Papani???
-
+- [ ] At mizi cara pod tou sanitkou
 - [ ] Rozdil my vs oni
 - [ ] Rozdil oproti ideaulu
 - [ ] Porovnani casu Bez naseho reseni
