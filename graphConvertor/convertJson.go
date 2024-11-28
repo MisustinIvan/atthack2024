@@ -45,6 +45,74 @@ func TurnGraphToGeoJSON(graph node.Graph) (paths, joints gj.FeatureCollection[gj
 }
 
 
+func GeoJSONToGraph(paths, joints gj.FeatureCollection[gj.Geometry]) (node.Graph, error) {
+    geoPaths, geoNodes := LineCollToGeoPath(paths), PointsCollToGeoNode(joints)
+
+    // collect relations
+    rels := make(map[gj.Coordinate][]struct{
+        Coordinate gj.Coordinate
+        State node.ConnState
+        Size, Cars int
+    })
+    var (
+        exists bool
+        ends [2]gj.Coordinate
+        val struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}
+    )
+    for _, v := range geoPaths {
+        ends = v.Ends
+        val = struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}{
+                ends[1], v.State, v.Size, v.Cars}
+        _, exists = rels[ends[0]]
+        if exists {
+            rels[ends[0]] = append(rels[ends[0]], val)
+        } else {
+            rels[ends[0]] = []struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}{val}
+        }
+    }
+
+    //half init nodes
+    nodes := make([]*node.Node, 0, len(geoNodes))
+    for _, v := range geoNodes {
+        nodes = append(nodes, &node.Node{Id: v.Id, Pos: CoordToPos(v.Coordinate)})
+    }
+    // get conns for each node
+    var (
+        main gj.Coordinate
+        mainPos, otherPos node.Pos
+        target *node.Node
+        connect map[*node.Node]node.ConnParams
+    )
+    for _, outer := range nodes {
+        main = PosToCoord(outer.Pos)
+        connect = make(map[*node.Node]node.ConnParams)
+        // make conns
+        for _, inner := range rels[main] {
+            mainPos, otherPos = outer.Pos, CoordToPos(inner.Coordinate)
+            // search for target to assign for
+            for _, v := range nodes {
+                if v.Pos == otherPos {
+                    target = v
+                    break
+                }
+            }
+            // asign
+            connect[target] = node.ConnParams{
+                Dist: mainPos.DistanceTo(otherPos),
+                Size: inner.Size,
+                State: inner.State,
+                NCars: inner.Cars,
+            }
+        }
+        // assign conns
+        outer.Conns = connect
+    }
+
+    // pray to Kerninghan
+    return node.Graph{ Nodes: nodes, Root: nodes[0] }, nil
+}
+
+
 type GeoNode struct {
     Id int      `json:"id"`
     gj.Coordinate `json:"coordinates"`
