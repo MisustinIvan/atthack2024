@@ -2,11 +2,19 @@ package node
 
 import (
 	"errors"
+	"math"
 )
 
 type Pos struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
+}
+
+// calculates the distance between two points
+func (p Pos) DistanceTo(o Pos) float64 {
+	dx := p.X - o.X
+	dy := p.Y - o.Y
+	return math.Sqrt(dx*dx + dy*dy)
 }
 
 type ConnState int
@@ -17,10 +25,12 @@ const (
 	Danger
 )
 
+// describes connection between two nodes
 type ConnParams struct {
 	Dist  float64   // distance to destination
 	Size  int       // size of connection
 	State ConnState // state of the connection
+	NCars int       // amount of cars on connection
 }
 
 // node should never be created directly, because the id is going to be invalid
@@ -65,23 +75,35 @@ func (g *Graph) NewNode(pos Pos) *Node {
 // already linked error
 var AlreadyLinkedError = errors.New("Nodes already linked")
 
-// links two nodes in a single direction with a connection with given parameters, fails if already linked
-func (g *Graph) LinkOne(from, to *Node, params ConnParams) error {
+// links two nodes in a single direction with a connection with given connection size, fails if already linked
+func (g *Graph) LinkOne(from, to *Node, size int) error {
 	_, connected := from.Conns[to]
 	if connected {
 		return AlreadyLinkedError
 	}
 
-	from.Conns[to] = params
+	from.Conns[to] = ConnParams{
+		Dist:  from.Pos.DistanceTo(to.Pos),
+		Size:  size,
+		State: Open,
+		NCars: 0,
+	}
 	return nil
 }
 
-// links two nodes in both directions with a connection with given parameters, fails if both already linked, does not fail if only one linked
-func (g *Graph) LinkBoth(from, to *Node, params ConnParams) error {
+// links two nodes in both directions with a connection with given size, fails if both already linked, does not fail if only one linked
+func (g *Graph) LinkBoth(from, to *Node, size int) error {
 	_, connected_from := from.Conns[to]
 	_, connected_to := to.Conns[from]
 	if connected_from && connected_to {
 		return AlreadyLinkedError
+	}
+
+	params := ConnParams{
+		Dist:  from.Pos.DistanceTo(to.Pos),
+		Size:  size,
+		State: Open,
+		NCars: 0,
 	}
 
 	from.Conns[to] = params
