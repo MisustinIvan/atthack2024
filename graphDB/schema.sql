@@ -8,7 +8,8 @@ CREATE TABLE graph_paths (
 
 -- Path ends
 CREATE TABLE path_ends (
-    parent_id INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    parent_id INTEGER NOT NULL,
     longitude REAL NOT NULL,
     latitude REAL NOT NULL,
     FOREIGN KEY (parent_id) REFERENCES graph_paths
