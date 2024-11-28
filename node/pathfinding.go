@@ -3,6 +3,7 @@ package node
 import (
 	"container/heap"
 	"errors"
+	"iter"
 	"math"
 	"optitraffic/pqueue"
 )
@@ -69,4 +70,26 @@ func (pf *Pathfinder) Path(from, to *Node) ([]*Node, error) {
 	}
 
 	return path, nil
+}
+
+func PathLength(nodes []*Node) float64 {
+	res := 0.0
+
+	for n1, n2 := range IntoPairIter(nodes) {
+		res += n1.Conns[n2].Dist
+	}
+
+	return res
+}
+
+func IntoPairIter[T any](xs []T) iter.Seq2[T, T] {
+	return func(yield func(T, T) bool) {
+		for i := 0; i < len(xs)-1; i++ {
+			a := xs[i]
+			b := xs[i+1]
+			if !yield(a, b) {
+				return
+			}
+		}
+	}
 }

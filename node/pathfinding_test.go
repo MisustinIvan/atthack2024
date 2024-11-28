@@ -35,4 +35,6 @@ func TestPathfinding(t *testing.T) {
 		}
 		t.Fatal(err)
 	}
+
+	//fmt.Printf("node.PathLength(path): %v\n", node.PathLength(path))
 }
