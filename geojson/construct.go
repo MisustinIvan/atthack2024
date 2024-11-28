@@ -12,6 +12,42 @@ func CreatePoint(point Coordinate) Geometry {
 }
 
 
+func WrapFeature(geometry Geometry, props map[string]any) Feature {
+    var temp map[string]any
+    if props != nil {
+        temp = make(map[string]any, len(props))
+        for k,v := range props {
+            temp[k] = v
+        }
+    }
+    return Feature{geometry, temp}
+}
+
+type fShell struct {
+    Typ GeoType `json:"type"`
+    Geometry `json:"geometry"`
+    Props map[string]any `json:"properties"`
+}
+
+func (f Feature) ToJSON() (string, error) {
+    shell := fShell{FeatureT, f.Geometry, f.Props}
+    out, err := json.Marshal(shell)
+    if err != nil {
+        return "", err
+    }
+    return string(out), nil
+}
+
+func FeatureFromJSON(data string) (Feature, error) {
+    var shell fShell
+    err := json.Unmarshal([]byte(data), &shell)
+    if err != nil {
+        return *new(Feature), err
+    }
+    return Feature{shell.Geometry, shell.Props}, nil
+}
+
+
 
 func CreateGeometryColl(geometries ...Geometry) GeometryCollection {
     return geometries

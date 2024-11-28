@@ -19,6 +19,10 @@ const (
     FeatureCollectionT GeoType = "FeatureCollection"
 )
 
+type IJSONable interface {
+    ToJSON() (string, error)
+}
+
 type GeometryCollection []Geometry
 
 type FeatureCollection []Feature
