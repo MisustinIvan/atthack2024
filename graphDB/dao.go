@@ -124,7 +124,7 @@ func (dao *SQLiteDAO) GetAllPaths() (gj.FeatureCollection[gj.Geometry], error) {
 
 
 func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
-    paths, points := conv.GoOverGraph(graph)
+    paths, points := conv.TurnGraphToGeoJSON(graph)
 
     // Extract nodes
     pointArgs := conv.PointsCollToGeoNode(points)

@@ -14,7 +14,7 @@ func CoordToPos(coord gj.Coordinate) node.Pos {
     return node.Pos{X: coord[0], Y: coord[1]}
 }
 
-func GoOverGraph(graph node.Graph) (paths, joints gj.FeatureCollection[gj.Geometry]) {
+func TurnGraphToGeoJSON(graph node.Graph) (paths, joints gj.FeatureCollection[gj.Geometry]) {
     paths = make([]gj.Feature[gj.Geometry], 0)
     joints = make([]gj.Feature[gj.Geometry], 0)
     var (
