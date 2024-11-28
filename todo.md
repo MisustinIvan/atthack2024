@@ -5,7 +5,7 @@
 - [ ] GeoJSON
 - [ ] Spojeni s nodou +stav spojeni(semtamfor)
 - [ ] Vytizeni spojeni( jak moc cervene to bude vybarveny)
-- [ ] Pocet pruhu / kvalita
+- [x] Pocet pruhu / kvalita
 
 ## Path finding
 
