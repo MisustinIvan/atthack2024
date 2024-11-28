@@ -59,7 +59,7 @@ func PointToGeoNode(point gj.Feature[gj.Geometry]) (GeoNode, error) {
     } else if id, ok := val.(int); !ok {
         return *new(GeoNode), errors.New("not an id")
     } else {
-        return GeoNode{point.Geometry.Coords[0], id}, nil
+        return GeoNode{gj.Coordinate(point.Geometry.Coords[0]), id}, nil
     }
 }
 
