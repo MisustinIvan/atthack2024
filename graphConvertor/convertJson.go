@@ -46,8 +46,8 @@ func GoOverGraph(graph node.Graph) (paths, joints gj.FeatureCollection[gj.Geomet
 
 
 type GeoNode struct {
-    gj.Coordinate `json:"coordinates"`
     Id int      `json:"id"`
+    gj.Coordinate `json:"coordinates"`
 }
 
 func PointToGeoNode(point gj.Feature[gj.Geometry]) (GeoNode, error) {
@@ -59,7 +59,7 @@ func PointToGeoNode(point gj.Feature[gj.Geometry]) (GeoNode, error) {
     } else if id, ok := val.(int); !ok {
         return *new(GeoNode), errors.New("not an id")
     } else {
-        return GeoNode{gj.Coordinate(point.Geometry.Coords[0]), id}, nil
+        return GeoNode{Coordinate: gj.Coordinate(point.Geometry.Coords[0]), Id: id}, nil
     }
 }
 

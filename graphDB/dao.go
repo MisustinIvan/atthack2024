@@ -2,6 +2,7 @@ package graphdb
 
 import (
 	"database/sql"
+	"errors"
 	gj "optitraffic/geojson"
 	conv "optitraffic/graphConvertor"
 	"optitraffic/node"
@@ -10,11 +11,9 @@ import (
 )
 
 type GraphDAO interface {
-    GetAllPoints() gj.FeatureCollection[gj.Geometry]
-    GetAllNodes() []node.Node
-    GetNodeById(id int) (node.Node, error)
-    GetAllPaths() gj.FeatureCollection[gj.Geometry]
-    GetGraph() (paths, points gj.FeatureCollection[gj.Geometry])
+    GetAllPoints() (gj.FeatureCollection[gj.Geometry], error)
+    GetAllPaths() (gj.FeatureCollection[gj.Geometry], error)
+    GetGraph() (paths, points gj.FeatureCollection[gj.Geometry], err error)
 
     StoreGraph(node.Graph) error
     StoreGeoNodes(...conv.GeoNode) error
@@ -28,6 +27,101 @@ type SQLiteDAO struct {
 func NewDAO(db *sql.DB) SQLiteDAO {
     return SQLiteDAO{db}
 }
+
+
+func (dao *SQLiteDAO) GetGraph() (paths, points gj.FeatureCollection[gj.Geometry], err error) {
+    points, err = dao.GetAllPoints()
+    if err != nil {
+        return nil, nil, err
+    }
+    paths, err = dao.GetAllPaths()
+    if err != nil {
+        return nil, nil, err
+    }
+    return paths, points, nil
+}
+
+func (dao *SQLiteDAO) GetAllPoints() (gj.FeatureCollection[gj.Geometry], error) {
+    out, err := dao.db.Query("SELECT id, longitude, latitude FROM graph_nodes ORDER BY id")
+    if err != nil {
+        return nil, err
+    }
+    defer out.Close()
+
+    nodesOut := make([]conv.GeoNode, 0)
+    var (
+        lastID int
+        lastLong, lastLat float64
+    )
+    for out.Next() {
+        if err := out.Scan(&lastID, &lastLong, &lastLat); err != nil {
+            return nil, err
+        }
+        nodesOut = append(nodesOut, conv.GeoNode{Id: lastID, Coordinate: gj.CreateCoordinate(lastLong, lastLat)})
+    }
+
+    if err := out.Err(); err != nil {
+        return nil, err
+    }
+    return conv.GeoNodesToPointsColl(nodesOut...), nil
+}
+
+func (dao *SQLiteDAO) GetAllPaths() (gj.FeatureCollection[gj.Geometry], error) {
+    // Magic
+    out, err := dao.db.Query(`
+        SELECT graph_paths.id, path_ends.longitude, path_ends.latitude,
+            graph_paths.state, graph_paths.size, graph_paths.cars
+        FROM graph_paths INNER JOIN
+            path_ends ON graph_paths.id = path_ends.parent_id
+        ORDER BY graph_paths.id, path_ends.id
+    `)
+    if err != nil {
+        return nil, err
+    }
+    defer out.Close()
+
+    // extract data
+    coords, data := make([][2]gj.Coordinate, 0), make([]struct{state, size, cars int}, 0)
+    var (
+        lastID, currID, coordTupleIndex, i int
+        lastLong, LastLat float64
+        lastState, lastSize, lastCars int
+    )
+    for out.Next() {
+        if err := out.Scan(&currID, &lastLong, &LastLat, &lastState, &lastSize, &lastCars); err != nil {
+            return nil, err
+        }
+        if currID != lastID {
+            data = append(data, struct{state, size, cars int}{
+                lastState, lastSize, lastCars})
+            coords = append(coords, [2]gj.Coordinate{})
+            lastID = currID
+            coordTupleIndex--
+        } else { coordTupleIndex++ }
+        coords[i][coordTupleIndex] = gj.CreateCoordinate(lastLong, LastLat)
+        i++
+    }
+    if err := out.Err(); err != nil {
+        return nil, err
+    }
+
+    // aggregate to GeoPaths
+    leng := len(data)
+    if leng != len(coords) {
+        return nil, errors.New("neco se posralo")
+    }
+    paths := make([]conv.GeoPath, 0, leng)
+    var dat struct{state, size, cars int}
+    for i := 0; i < leng; i++ {
+        dat = data[i]
+        paths = append(paths, conv.GeoPath{Ends: coords[i],
+            State: node.ConnState(dat.state), Size: dat.size, Cars: dat.cars})
+    }
+
+    return conv.GeoPathsToLineColl(paths...), nil
+}
+
+
 
 func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
     paths, points := conv.GoOverGraph(graph)
