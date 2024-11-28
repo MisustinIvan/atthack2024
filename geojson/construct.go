@@ -4,15 +4,18 @@ import (
 	"errors"
 )
 
+// Creates a coordinate
 func CreateCoordinate(long, lat float64) Coordinate {
     return [2]float64{long, lat}
 }
 
 
+// Creates a point
 func CreatePoint(point Coordinate) Geometry {
     return Geometry{PointT, []Coordinate{point}}
 }
 
+// Creates a group of points
 func CreateMultiPoint(points ...Geometry) (MultiGeometry, error) {
     if len(points) == 0 {
         return *new(MultiGeometry), errors.New("too few points")
@@ -27,6 +30,8 @@ func CreateMultiPoint(points ...Geometry) (MultiGeometry, error) {
     return MultiGeometry{MultiPointT, temp}, nil
 }
 
+
+// Creates a lines between points
 func CreateLineString(joints ...Coordinate) (Geometry, error) {
     if len(joints) < 2 {
         return *new(Geometry), errors.New("a line has at least two points")
@@ -34,6 +39,7 @@ func CreateLineString(joints ...Coordinate) (Geometry, error) {
     return Geometry{LineStringT, joints}, nil
 }
 
+// Creates a group of lines between own points
 func CreateMultiLineString(lineStrings ...Geometry) (MultiGeometry, error) {
     if len(lineStrings) == 0 {
         return *new(MultiGeometry), errors.New("no args bruh")
@@ -48,6 +54,8 @@ func CreateMultiLineString(lineStrings ...Geometry) (MultiGeometry, error) {
     return MultiGeometry{MultiLineStringT, unfolded}, nil
 }
 
+
+// Creates lines that connect into a polygon
 func CreatePolygon(verticies ...Coordinate) (Geometry, error) {
     if len(verticies) < 4 {
         return *new(Geometry), errors.New("a polygon has at least three verticies")
@@ -58,6 +66,7 @@ func CreatePolygon(verticies ...Coordinate) (Geometry, error) {
     return Geometry{PolygonT, verticies}, nil
 }
 
+// Creates a group of polygons
 func CreateMultiPolygon(polygons ...Geometry) (MultiGeometry, error) {
     if len(polygons) == 0 {
         return *new(MultiGeometry), errors.New("nuh uh")
@@ -73,11 +82,13 @@ func CreateMultiPolygon(polygons ...Geometry) (MultiGeometry, error) {
 }
 
 
+// Creates a collection of same-type different geometric kinds
 func CreateGeometryColl[G Geometry | MultiGeometry](geometries ...G) GeometryCollection[G] {
     return geometries
 }
 
 
+// Wraps a geometric type as a Feature
 func WrapFeature[G Geometry | MultiGeometry](geometry G, props map[string]any) Feature[G] {
     var temp map[string]any
     if props != nil {
@@ -90,6 +101,7 @@ func WrapFeature[G Geometry | MultiGeometry](geometry G, props map[string]any) F
 }
 
 
+// Creates a collection of different features with the same underlying geometric type
 func CreateFeatureColl[G Geometry | MultiGeometry](features ...Feature[G]) FeatureCollection[G] {
     return features
 }

@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCreateColl(t *testing.T) {
     points := []Geometry{
@@ -39,7 +41,7 @@ func areEqualFeature(a, b Feature[Geometry]) bool {
         return false
     }
     if !(aNil || bNil) {
-        for k,v := range a.Props{
+        for k, v := range a.Props {
             if b.Props[k] != v {
                 return false
             }
