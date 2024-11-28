@@ -1,6 +1,8 @@
 package geojson
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestCreateColl(t *testing.T) {
     points := []Geometry{
@@ -18,13 +20,13 @@ func TestCreateColl(t *testing.T) {
 
 func TestFeature(t *testing.T) {
     point := CreatePoint(CreateCoordinate(0, 50))
-    feature := Feature{point, nil}
+    feature := Feature[Geometry]{point, nil}
     json, err := feature.ToJSON()
     if err != nil {
         t.Fail()
     }
     print(json)
-    callback, err := FeatureFromJSON(json)
+    callback, err := FeatureFromJSON[Geometry](json)
     if err != nil {
         t.Fail()
     }
@@ -33,13 +35,13 @@ func TestFeature(t *testing.T) {
     }
 }
 
-func areEqualFeature(a, b Feature) bool {
+func areEqualFeature(a, b Feature[Geometry]) bool {
     aNil, bNil := a.Props == nil, b.Props == nil
     if aNil && !bNil {
         return false
     }
     if !(aNil || bNil) {
-        for k,v := range a.Props{
+        for k, v := range a.Props {
             if b.Props[k] != v {
                 return false
             }
