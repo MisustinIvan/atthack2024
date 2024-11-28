@@ -29,7 +29,7 @@ func NewDAO(db *sql.DB) SQLiteDAO {
 }
 
 
-func (dao *SQLiteDAO) GetGraph() (paths, points gj.FeatureCollection[gj.Geometry], err error) {
+func (dao *SQLiteDAO) GetGraph() (paths gj.FeatureCollection[gj.Geometry], points gj.FeatureCollection[gj.FlatGeometry], err error) {
     points, err = dao.GetAllPoints()
     if err != nil {
         return nil, nil, err
@@ -41,7 +41,7 @@ func (dao *SQLiteDAO) GetGraph() (paths, points gj.FeatureCollection[gj.Geometry
     return paths, points, nil
 }
 
-func (dao *SQLiteDAO) GetAllPoints() (gj.FeatureCollection[gj.Geometry], error) {
+func (dao *SQLiteDAO) GetAllPoints() (gj.FeatureCollection[gj.FlatGeometry], error) {
     out, err := dao.db.Query("SELECT id, longitude, latitude FROM graph_nodes ORDER BY id")
     if err != nil {
         return nil, err

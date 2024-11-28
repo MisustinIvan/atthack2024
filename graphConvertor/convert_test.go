@@ -13,7 +13,7 @@ func TestConverGeoNode(t *testing.T) {
         t.Fail()
     }
 
-    if point.Coords[0][0] != result.Coordinate[0] || point.Coords[0][1] != result.Coordinate[1] {
+    if point.SingleCoords[0] != result.Coordinate[0] || point.SingleCoords[1] != result.Coordinate[1] {
         t.Fail()
     }
 }
