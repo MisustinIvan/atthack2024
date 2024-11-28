@@ -57,13 +57,16 @@ type Graph struct {
 
 // creates a new graph with a root node position
 func NewGraph(root_pos Pos) Graph {
+	root := Node{
+		Id:    0,
+		Pos:   root_pos,
+		Conns: map[*Node]ConnParams{},
+	}
+
 	return Graph{
+		Nodes:   []*Node{&root},
 		next_id: 1,
-		Root: &Node{
-			Id:    0,
-			Pos:   root_pos,
-			Conns: map[*Node]ConnParams{},
-		},
+		Root:    &root,
 	}
 }
 
