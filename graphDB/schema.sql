@@ -10,7 +10,7 @@ CREATE TABLE graph_paths (
 CREATE TABLE path_ends (
     parent_id INTEGER PRIMARY KEY,
     longitude REAL NOT NULL,
-    latitude REAL NOT NULL
+    latitude REAL NOT NULL,
     FOREIGN KEY (parent_id) REFERENCES graph_paths
 )
 
