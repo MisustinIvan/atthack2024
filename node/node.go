@@ -33,6 +33,15 @@ type ConnParams struct {
 	NCars int       // amount of cars on connection
 }
 
+// Calculates weight of connection based on its parameters
+func (p ConnParams) ConnectionWeight() float64 {
+	if p.State == Closed || p.State == Danger {
+		return math.MaxInt
+	}
+
+	return (p.Dist * (1 + (float64(p.NCars) / float64(p.Size))))
+}
+
 // node should never be created directly, because the id is going to be invalid
 type Node struct {
 	Id    int                  // assigned automaticaly
