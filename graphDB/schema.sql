@@ -12,7 +12,6 @@ CREATE TABLE path_ends (
     longitude REAL NOT NULL,
     latitude REAL NOT NULL
     FOREIGN KEY (parent_id) REFERENCES graph_paths
-    UNIQUE(parent_id, longitude, latitude)
 )
 
 --Nodes
