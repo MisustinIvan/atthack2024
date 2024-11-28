@@ -1,6 +1,7 @@
-package graphcreator
+package graphconvertor
 
 import (
+	"errors"
 	gj "optitraffic/geojson"
 	"optitraffic/node"
 )
@@ -41,4 +42,23 @@ func GoOverGraph(graph node.Graph) (paths, joints gj.FeatureCollection[gj.Geomet
     }
 
     return paths, joints
+}
+
+
+type GeoNode struct {
+    gj.Coordinate `json:"coordinates"`
+    Id int      `json:"id"`
+}
+
+func PointToGeoNode(point gj.Feature[gj.Geometry]) (GeoNode, error){
+    if point.Geometry.GeometryType != gj.PointT {
+        return *new(GeoNode), errors.New("not a point")
+    }
+    if val, ok := point.Props["id"]; !ok {
+        return *new(GeoNode), errors.New("missing id")
+    } else if id, ok := val.(int); !ok {
+        return *new(GeoNode), errors.New("not an id")
+    } else {
+        return GeoNode{point.Geometry.Coords[0], id}, nil
+    }
 }
