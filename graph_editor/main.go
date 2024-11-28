@@ -1,16 +1,44 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"optitraffic/geojson"
+	graphconvertor "optitraffic/graphConvertor"
+	graphdb "optitraffic/graphDB"
 	"optitraffic/templates"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var creating_graph = false
 
+func geojson_string_pair_parse(input string) [2]string {
+	// Split the input string at the boundary between two FeatureCollections
+	parts := strings.Split(input, `},{"type":"FeatureCollection"`)
+
+	// Add back the missing curly braces around the two parts
+	part1 := parts[0] + `}`
+	part1 = part1[1:]
+
+	part2 := `{"type":"FeatureCollection"` + parts[1]
+	part2 = part2[:len(part2)-1]
+
+	// Create an array with the two strings
+	return [2]string{part1, part2}
+}
+
 func main() {
+	db, err := sql.Open("sqlite3", "../graphDB/db.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	dao := graphdb.NewDAO(db)
+
 	app := fiber.New()
 
 	templates, err := templates.NewTemplates()
@@ -39,7 +67,30 @@ func main() {
 	})
 
 	app.Post("/save_geojson", func(c *fiber.Ctx) error {
-		fmt.Printf("string(c.Body()): %v\n", string(c.Body()))
+		parts := geojson_string_pair_parse(string(c.Body()))
+
+		resp_points, err := geojson.FeatureCollFromJSON[geojson.FlatGeometry](parts[0])
+		if err != nil {
+			return err
+		}
+
+		resp_lines, err := geojson.FeatureCollFromJSON[geojson.Geometry](parts[1])
+		if err != nil {
+			return err
+		}
+
+		err = dao.StoreGeoNodes(graphconvertor.PointsCollToGeoNode(resp_points)...)
+		if err != nil {
+			fmt.Printf("shit")
+			return err
+		}
+
+		err = dao.StoreGeoPaths(graphconvertor.LineCollToGeoPath(resp_lines)...)
+		if err != nil {
+			fmt.Printf("fuck")
+			return err
+		}
+
 		return c.SendStatus(fiber.StatusOK)
 	})
 

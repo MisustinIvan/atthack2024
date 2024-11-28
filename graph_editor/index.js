@@ -81,25 +81,29 @@ let to_save_format = (graph) => {
 
 	for (let feature of graph.features) {
 		if (feature.geometry.type == "Point") {
+			feature.properties = {};
 			points.push(feature);
 		}
 		if (feature.geometry.type == "LineString") {
+			feature.properties = {};
 			lines.push(feature);
 		}
 	}
 
 	return [
 		{ type: "FeatureCollection", features: points },
-		{ type: "FeatureCollection", feature: lines },
+		{ type: "FeatureCollection", features: lines },
 	];
 };
 
 let save = (_) => {
 	console.log("saving");
-	console.log(app_state.graph);
+	//console.log(app_state.graph);
+	data = to_save_format(app_state.graph);
+	console.log(data);
 	fetch("/save_geojson", {
 		method: "POST",
-		body: JSON.stringify(to_save_format(app_state.graph)),
+		body: JSON.stringify(data),
 	});
 };
 
