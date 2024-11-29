@@ -45,6 +45,18 @@ func (tm *TrafficManager) NewRandomVehicle() {
 	tm.vehicle_next_id += 1
 }
 
+func (t *TrafficManager) Repath(v *Vehicle) error {
+	pf := node.NewPathfinder(t.Graph)
+	route, err := pf.Path(v.At, v.Target)
+	if err != nil {
+		return err
+	}
+
+	v.Route = route[1:]
+
+	return nil
+}
+
 func (v *Vehicle) AtTarget() bool {
 	return v.Target == v.At
 }
