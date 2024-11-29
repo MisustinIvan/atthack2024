@@ -25,9 +25,9 @@ func TestConvertGeoNodesM(t *testing.T) {
         gj.CreatePoint(gj.CreateCoordinate(1, 51)),
     }
     feats := gj.CreateFeatureColl(
-        gj.WrapFeature(points[0], map[string]any{"id":0}),
-        gj.WrapFeature(points[1], map[string]any{"id":1}),
-        gj.WrapFeature(points[2], map[string]any{"id":2}),
+        gj.WrapFeature(points[0], map[string]any{"id":0.0}),
+        gj.WrapFeature(points[1], map[string]any{"id":1.0}),
+        gj.WrapFeature(points[2], map[string]any{"id":2.0}),
     )
 
     result, err := PointsCollToGeoNode(feats)
