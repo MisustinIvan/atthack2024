@@ -7,6 +7,7 @@ const Status = {
 const MARKER_RADIUS = 8;
 
 let app_state = {
+	next_id: 0,
 	status: Status.NOT_CREATING,
 	map: {},
 	from_point: [],
@@ -81,11 +82,17 @@ let to_save_format = (graph) => {
 
 	for (let feature of graph.features) {
 		if (feature.geometry.type == "Point") {
-			feature.properties = {};
+			feature.properties = {
+				id: app_state.next_id++,
+			};
 			points.push(feature);
 		}
 		if (feature.geometry.type == "LineString") {
-			feature.properties = {};
+			feature.properties = {
+				state: 0,
+				size: 1,
+				cars: 0,
+			};
 			lines.push(feature);
 		}
 	}

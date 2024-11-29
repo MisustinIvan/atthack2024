@@ -79,13 +79,23 @@ func main() {
 			return err
 		}
 
-		err = dao.StoreGeoNodes(graphconvertor.PointsCollToGeoNode(resp_points)...)
+		fmt.Printf("resp_points: %v\n", resp_points)
+
+		resp_nodes, err := graphconvertor.PointsCollToGeoNode(resp_points)
+		if err != nil {
+			return err
+		}
+		err = dao.StoreGeoNodes(resp_nodes...)
 		if err != nil {
 			fmt.Printf("shit")
 			return err
 		}
 
-		err = dao.StoreGeoPaths(graphconvertor.LineCollToGeoPath(resp_lines)...)
+		resp_paths, err := graphconvertor.LineCollToGeoPath(resp_lines)
+		if err != nil {
+			return err
+		}
+		err = dao.StoreGeoPaths(resp_paths...)
 		if err != nil {
 			fmt.Printf("fuck")
 			return err
