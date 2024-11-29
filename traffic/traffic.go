@@ -28,6 +28,7 @@ type TrafficManager struct {
 }
 
 func NewTrafficManager(graph *node.Graph) TrafficManager {
+
     return TrafficManager{
         vehicle_next_id: 0,
         Graph:           graph,
@@ -113,6 +114,34 @@ func (t *TrafficManager) VehiclesAsPoints() geojson.FeatureCollection[geojson.Fl
 
 // Updates the state of all vehicles on the graph
 func (t *TrafficManager) Update(dt float64) {
+    // Regular traffic lights
+    //get ignored nodes
+    forbiddenNodes := make([]*node.Node, 0, len(t.Vehicles)*3)
+    var (
+        leng int
+        curr *node.Node
+    )
+    for _, v := range t.Vehicles {
+        leng = min(3, len(v.Route))
+        for i := 0; i < leng; i++ {
+            curr = v.Route[i]
+            if !containsNode(forbiddenNodes, curr) {
+                forbiddenNodes = append(forbiddenNodes, curr)
+            }
+        }
+    }
+    //generation of traffic lights
+    var (
+        tempC node.ConnParams
+    )
+    for _, curr := range t.Graph.Nodes {
+        if containsNode(forbiddenNodes, curr) {continue}
+        for k := range curr.Conns {
+            tempC = k.Conns[curr]
+            k.Conns[curr] = node.ConnParams{Dist: tempC.Dist, Size: tempC.Size, State: nextTrafficState(), NCars: tempC.NCars}
+        }
+    }
+
 
     // Update route
     for _, v := range t.Vehicles {
@@ -176,5 +205,23 @@ func (t *TrafficManager) Update(dt float64) {
                 }
             }
         }
+    }
+}
+
+func containsNode(nodes []*node.Node, target *node.Node) bool {
+    for _, v := range nodes {
+        if v == target {
+            return true
+        }
+    }
+    return false
+}
+
+// Returns either Open or Closed
+func nextTrafficState() node.ConnState {
+    if rand.Float64() > 0.5 {
+        return node.Open
+    } else {
+        return node.Closed
     }
 }
