@@ -88,7 +88,7 @@ const magicShiftPercent = 0.05
 const interpolPos = (coordsSource, coordsDest) => {
     let horizontalDis = coordsSource[0] - coordsDest[0]
     let verticalDis = coordsSource[1] - coordsDest[1]
-    return [coordsDest[0] - horizontalDis*magicShiftPercent, coordsDest[1] - verticalDis*magicShiftPercent]
+    return [coordsDest[0] + horizontalDis*magicShiftPercent, coordsDest[1] + verticalDis*magicShiftPercent]
 }
 
 const split_lights = (fc) => {
