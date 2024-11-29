@@ -4,6 +4,24 @@ import (
 	"encoding/json"
 )
 
+func (g FlatGeometry) ToJSON() (string, error) {
+    out, err := json.Marshal(g)
+    if err != nil {
+        return "", err
+    }
+    return string(out), nil
+}
+
+func FlatGeometryFromJSON(data string) (FlatGeometry, error) {
+    var out FlatGeometry
+    err := json.Unmarshal([]byte(data), &out)
+    if err != nil {
+        return *new(FlatGeometry), err
+    }
+    return out, nil
+}
+
+
 func (g Geometry) ToJSON() (string, error) {
     out, err := json.Marshal(g)
     if err != nil {
@@ -37,6 +55,24 @@ func MultiGeometryFromJSON(data string) (MultiGeometry, error) {
     err := json.Unmarshal([]byte(data), &out)
     if err != nil {
         return *new(MultiGeometry), err
+    }
+    return out, nil
+}
+
+
+func (g MultiMultiGeometry) ToJSON() (string, error) {
+    out, err := json.Marshal(g)
+    if err != nil {
+        return "", err
+    }
+    return string(out), nil
+}
+
+func MultiMultiGeometryFromJSON(data string) (MultiMultiGeometry, error) {
+    var out MultiMultiGeometry
+    err := json.Unmarshal([]byte(data), &out)
+    if err != nil {
+        return *new(MultiMultiGeometry), err
     }
     return out, nil
 }
