@@ -3,6 +3,7 @@ package traffic
 import (
 	"log"
 	"math/rand"
+	"optitraffic/geojson"
 	"optitraffic/node"
 )
 
@@ -64,6 +65,32 @@ func (v *Vehicle) AtTarget() bool {
 func (t *TrafficManager) RandomTarget(v *Vehicle) {
 	i := int(rand.Float64() * float64(len(t.Graph.Nodes)))
 	v.Target = t.Graph.Nodes[i]
+}
+
+func (v *Vehicle) InterpolatePos() node.Pos {
+	if len(v.Route) == 0 {
+		return v.At.Pos
+	}
+
+	diff := v.At.Pos.Diff(v.Route[0].Pos)
+	diff.X *= v.Progress
+	diff.Y *= v.Progress
+	return diff
+}
+
+func (t *TrafficManager) VehiclesAsPoints() geojson.FeatureCollection[geojson.FlatGeometry] {
+	res := geojson.FeatureCollection[geojson.FlatGeometry]{}
+	for _, v := range t.Vehicles {
+		pos := v.InterpolatePos()
+		res = append(res, geojson.Feature[geojson.FlatGeometry]{
+			Geometry: geojson.FlatGeometry{
+				GeometryType: geojson.PointT,
+				SingleCoords: [2]float64{pos.X, pos.Y},
+			},
+			Props: map[string]any{},
+		})
+	}
+	return res
 }
 
 func (t *TrafficManager) Update(dt float64) {
