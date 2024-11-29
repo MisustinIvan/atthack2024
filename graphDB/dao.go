@@ -100,7 +100,7 @@ func (dao *SQLiteDAO) GetAllPaths() (gj.FeatureCollection[gj.Geometry], error) {
                 lastState, lastSize, lastCars})
             coords = append(coords, [2]gj.Coordinate{})
             lastID = currID
-            coordTupleIndex--
+            coordTupleIndex = 0
         } else { coordTupleIndex++ }
         coords[i][coordTupleIndex] = gj.CreateCoordinate(lastLong, LastLat)
         i++
