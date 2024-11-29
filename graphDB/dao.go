@@ -13,7 +13,7 @@ import (
 type GraphDAO interface {
     GetAllPoints() (gj.FeatureCollection[gj.Geometry], error)
     GetAllPaths() (gj.FeatureCollection[gj.Geometry], error)
-    GetGraph() (paths, points gj.FeatureCollection[gj.Geometry], err error)
+    GetGraph() (node.Graph, error)
 
     StoreGraph(node.Graph) error
     StoreGeoNodes(...conv.GeoNode) error
@@ -29,16 +29,20 @@ func NewDAO(db *sql.DB) SQLiteDAO {
 }
 
 
-func (dao *SQLiteDAO) GetGraph() (paths gj.FeatureCollection[gj.Geometry], points gj.FeatureCollection[gj.FlatGeometry], err error) {
-    points, err = dao.GetAllPoints()
+func (dao *SQLiteDAO) GetGraph() (node.Graph, error) {
+    points, err := dao.GetAllPoints()
     if err != nil {
-        return nil, nil, err
+        return *new(node.Graph), err
     }
-    paths, err = dao.GetAllPaths()
+    paths, err := dao.GetAllPaths()
     if err != nil {
-        return nil, nil, err
+        return *new(node.Graph), err
     }
-    return paths, points, nil
+    graph, err := conv.GeoJSONToGraph(paths, points)
+    if err != nil {
+        return *new(node.Graph), err
+    }
+    return graph, nil
 }
 
 func (dao *SQLiteDAO) GetAllPoints() (gj.FeatureCollection[gj.FlatGeometry], error) {

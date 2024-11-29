@@ -2,7 +2,6 @@ package graphdb
 
 import (
 	"database/sql"
-	conv "optitraffic/graphConvertor"
 	"optitraffic/node"
 	"testing"
 
@@ -36,25 +35,6 @@ func TestStoreGraph(t *testing.T) {
     }
 }
 
-func TestIndependent(t *testing.T) {
-	// Connect
-    db, err := sql.Open("sqlite3", "./test.db")
-    if err != nil {
-        t.Error(err.Error())
-    }
-    db.Exec("DELETE FROM graph_paths")
-    db.Exec("DELETE FROM path_ends")
-    db.Exec("DELETE FROM graph_nodes")
-    // dao := NewDAO(db)
-    // // Setup
-    // poses := [...]node.Pos{
-    //     {X: 0, Y: 50},
-    //     {X: 1, Y: 50},
-    //     {X: 1, Y: 51},
-    // }
-
-}
-
 func TestGetGraph(t *testing.T) {
     // Connect
     db, err := sql.Open("sqlite3", "./test.db")
@@ -63,11 +43,7 @@ func TestGetGraph(t *testing.T) {
     }
     dao := NewDAO(db)
     // act & assert
-    paths, points, err := dao.GetGraph()
-    if err != nil {
-        t.Fail()
-    }
-    _, err = conv.GeoJSONToGraph(paths, points)
+    _, err = dao.GetGraph()
     if err != nil {
         t.Fail()
     }
