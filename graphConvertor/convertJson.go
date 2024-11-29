@@ -47,7 +47,10 @@ func TurnGraphToGeoJSON(graph node.Graph) (paths gj.FeatureCollection[gj.Geometr
 
 
 func GeoJSONToGraph(paths gj.FeatureCollection[gj.Geometry], joints gj.FeatureCollection[gj.FlatGeometry]) (node.Graph, error) {
-    geoPaths := LineCollToGeoPath(paths)
+    geoPaths, e := LineCollToGeoPath(paths)
+    if e != nil {
+        return *new(node.Graph), e
+    }
     geoNodes, e := PointsCollToGeoNode(joints)
     if e != nil {
         return *new(node.Graph), e
@@ -182,29 +185,28 @@ func LineStringToGeoPath(line gj.Feature[gj.Geometry]) (GeoPath, error) {
     }
 
     var (
-        state node.ConnState
-        size, cars int
+        state, size, cars float64
     )
 
     if val, ok := line.Props["state"]; !ok {
         return *new(GeoPath), errors.New("missing state")
-    } else if state, ok = val.(node.ConnState); !ok {
+    } else if state, ok = val.(float64); !ok {
         return *new(GeoPath), errors.New("not a state")
     }
 
     if val, ok := line.Props["size"]; !ok {
         return *new(GeoPath), errors.New("missing size")
-    } else if size, ok = val.(int); !ok {
+    } else if size, ok = val.(float64); !ok {
         return *new(GeoPath), errors.New("not a size")
     }
 
     if val, ok := line.Props["cars"]; !ok {
         return *new(GeoPath), errors.New("missing cars")
-    } else if cars, ok = val.(int); !ok {
+    } else if cars, ok = val.(float64); !ok {
         return *new(GeoPath), errors.New("not a cars")
     }
 
-    return GeoPath{[2]gj.Coordinate(line.Geometry.Coords), state, size, cars}, nil
+    return GeoPath{Ends: [2]gj.Coordinate(line.Geometry.Coords), State: node.ConnState(state), Size: int(size), Cars: int(cars)}, nil
 }
 
 func (g GeoPath) ToLineString() gj.Feature[gj.Geometry] {
@@ -212,7 +214,7 @@ func (g GeoPath) ToLineString() gj.Feature[gj.Geometry] {
     return gj.WrapFeature(line, map[string]any{"state": g.State, "size": g.Size, "cars": g.Cars})
 }
 
-func LineCollToGeoPath(collOfLines gj.FeatureCollection[gj.Geometry]) []GeoPath {
+func LineCollToGeoPath(collOfLines gj.FeatureCollection[gj.Geometry]) ([]GeoPath, error) {
     paths := make([]GeoPath, 0, len(collOfLines))
     var (
         lastP GeoPath
@@ -220,11 +222,12 @@ func LineCollToGeoPath(collOfLines gj.FeatureCollection[gj.Geometry]) []GeoPath 
     )
     for _, v := range collOfLines {
         lastP, e = LineStringToGeoPath(v)
-        if e == nil {
-            paths = append(paths, lastP)
+        if e != nil {
+            return nil, e
         }
+        paths = append(paths, lastP)
     }
-    return paths
+    return paths, nil
 }
 
 func GeoPathsToLineColl(paths ...GeoPath) gj.FeatureCollection[gj.Geometry] {
