@@ -15,76 +15,76 @@ import (
 )
 
 func main() {
-    db, err := sql.Open("sqlite3", "../graphDB/db.db")
-    if err != nil {
-        log.Fatal(err)
-    }
-    dao := graphdb.NewDAO(db)
-    app := fiber.New()
+	db, err := sql.Open("sqlite3", "../graphDB/db.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	dao := graphdb.NewDAO(db)
+	app := fiber.New()
 
-    graph, err := dao.GetGraph()
-    if err != nil {
-        log.Fatal(err)
-    }
+	graph, err := dao.GetGraph()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    tm := traffic.NewTrafficManager(&graph)
+	tm := traffic.NewTrafficManager(&graph)
 
-    for i := 0; i < 10; i++ {
-        tm.NewRandomVehicle(node.EmergencyVehicle)
-    }
+	for i := 0; i < 5; i++ {
+		tm.NewRandomVehicle(node.EmergencyVehicle)
+	}
 
-    templates, err := templates.NewTemplates()
-    if err != nil {
-        log.Fatal(err)
-    }
+	templates, err := templates.NewTemplates()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-    app.Get("/index.js", func(c *fiber.Ctx) error {
-        return c.SendFile("./index.js")
-    })
+	app.Get("/index.js", func(c *fiber.Ctx) error {
+		return c.SendFile("./index.js")
+	})
 
-    app.Get("/", func(c *fiber.Ctx) error {
-        return templates.Render("index", nil, c)
-    })
+	app.Get("/", func(c *fiber.Ctx) error {
+		return templates.Render("index", nil, c)
+	})
 
-    app.Get("/points", func(c *fiber.Ctx) error {
-        points, err := dao.GetAllPoints()
-        s, err := points.ToJSON()
-        if err != nil {
-            return err
-        }
+	app.Get("/points", func(c *fiber.Ctx) error {
+		points, err := dao.GetAllPoints()
+		s, err := points.ToJSON()
+		if err != nil {
+			return err
+		}
 
-        return c.Send([]byte(s))
-    })
+		return c.Send([]byte(s))
+	})
 
-    app.Get("/lines", func(c *fiber.Ctx) error {
-        lines, err := dao.GetAllPaths()
-        s, err := lines.ToJSON()
-        if err != nil {
-            return err
-        }
+	app.Get("/lines", func(c *fiber.Ctx) error {
+		lines, err := dao.GetAllPaths()
+		s, err := lines.ToJSON()
+		if err != nil {
+			return err
+		}
 
-        return c.Send([]byte(s))
-    })
+		return c.Send([]byte(s))
+	})
 
-    app.Get("/vehicles", func(c *fiber.Ctx) error {
-        tm.Update(0.0001)
-        fc := tm.VehiclesAsPoints()
-        s, err := fc.ToJSON()
-        if err != nil {
-            return err
-        }
+	app.Get("/vehicles", func(c *fiber.Ctx) error {
+		tm.Update(0.0001)
+		fc := tm.VehiclesAsPoints()
+		s, err := fc.ToJSON()
+		if err != nil {
+			return err
+		}
 
-        return c.Send([]byte(s))
-    })
+		return c.Send([]byte(s))
+	})
 
-    app.Get("/lights", func(c *fiber.Ctx) error {
-        path, _ := graphconvertor.TurnGraphToGeoJSON(*tm.Graph)
-        path_s, err := path.ToJSON()
-        if err != nil {
-            return err
-        }
-        return c.Send([]byte(path_s))
-    })
+	app.Get("/lights", func(c *fiber.Ctx) error {
+		path, _ := graphconvertor.TurnGraphToGeoJSON(*tm.Graph)
+		path_s, err := path.ToJSON()
+		if err != nil {
+			return err
+		}
+		return c.Send([]byte(path_s))
+	})
 
-    app.Listen(":6969")
+	app.Listen(":6969")
 }
