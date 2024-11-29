@@ -36,16 +36,23 @@ func NewTrafficManager(graph *node.Graph) TrafficManager {
     }
 }
 
-func (t *TrafficManager) NewRandomVehicle() {
+func (t *TrafficManager) NewRandomVehicle(typ node.VehicleType) {
     i := int(rand.Float64() * float64(len(t.Graph.Nodes)))
-    t.Vehicles = append(t.Vehicles, &Vehicle{
+    new := &Vehicle{
+        Type:     typ,
         Id:       t.vehicle_next_id,
-        Speed:    vehicle_speed,
         Target:   nil,
         At:       t.Graph.Nodes[i],
         Progress: 0,
         Route:    nil,
-    })
+    }
+    switch typ {
+    case node.NormalVehicle:
+        new.Speed = vehicle_speed
+    case node.EmergencyVehicle:
+        new.Speed = vehicle_speed * 2
+    }
+    t.Vehicles = append(t.Vehicles, new)
 
     t.vehicle_next_id += 1
 }
