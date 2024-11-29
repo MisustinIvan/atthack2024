@@ -4,6 +4,7 @@ import (
 	"errors"
 	gj "optitraffic/geojson"
 	"optitraffic/node"
+	"reflect"
 )
 
 func PosToCoord(pos node.Pos) gj.Coordinate {
@@ -130,6 +131,7 @@ func PointToGeoNode(point gj.Feature[gj.FlatGeometry]) (GeoNode, error) {
     if val, ok := point.Props["id"]; !ok {
         return *new(GeoNode), errors.New("missing id")
     } else if id, ok := val.(int); !ok {
+        print(reflect.TypeOf(val))
         return *new(GeoNode), errors.New("not an id")
     } else {
         return GeoNode{Coordinate: point.Geometry.SingleCoords, Id: id}, nil
