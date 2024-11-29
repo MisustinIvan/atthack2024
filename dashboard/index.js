@@ -3,6 +3,8 @@ let app_state = {
 	points: {},
 	lines: {},
 	vehicles: {},
+	ligths: {},
+	geojson_light_layer: {},
 	geojson_map_layer: {},
 	geojson_vehicle_layer: {},
 };
@@ -33,7 +35,6 @@ const dataToGeoJSON = (points, edges) => {
  * @returns {L.CircleMarker} - A Leaflet circle marker
  */
 const pointToLayer = (point, latlng) => {
-	console.log(point);
 	const marker = L.circleMarker(latlng, {
 		radius: MARKER_RADIUS,
 		color: "blue",
@@ -45,7 +46,6 @@ const pointToLayer = (point, latlng) => {
 };
 
 const vehicleToLayer = (point, latlng) => {
-	console.log(point);
 	const marker = L.circleMarker(latlng, {
 		radius: MARKER_RADIUS,
 		color: "red",
@@ -82,6 +82,59 @@ const render = (map, geoJSON) => {
 			}
 		},
 	}).addTo(map);
+};
+
+const split_lights = (fc) => {
+	let res = [];
+
+	for (let feature of fc.features) {
+		res.push({
+			type: "Feature",
+			geometry: {
+				type: "Point",
+				coordinates: feature.geometry.coordinates[1],
+			},
+			properties: feature.properties,
+		});
+	}
+
+	return { type: "FeatureCollection", features: res };
+};
+
+const lightToLayer = (point, latlng) => {
+	color = "";
+	state = point.properties.state;
+	if (state == 0) {
+		color = "green";
+	} else if (state == 1) {
+		color = "red";
+	} else {
+		color = "blue";
+	}
+	const marker = L.circleMarker(latlng, {
+		radius: MARKER_RADIUS / 2,
+		color: color,
+		weight: 2,
+		fillColor: color,
+		fillOpacity: 1,
+	});
+	return marker;
+};
+
+const render_lights = (map, lightsGeoJSON) => {
+	if (app_state.geojson_light_layer != {}) {
+		app_state.map.removeLayer(app_state.geojson_light_layer);
+	}
+
+	app_state.geojson_light_layer = L.geoJSON(lightsGeoJSON, {
+		pointToLayer: lightToLayer,
+		onEachFeature: (feature, layer) => {
+			if (feature.properties && feature.properties.name) {
+				layer.bindPopup(feature.properties.name);
+			}
+		},
+	}).addTo(map);
+	console.log(app_state.geojson_light_layer);
 };
 
 /**
@@ -125,10 +178,19 @@ let main = async () => {
 			return []; // Fallback to an empty array if there's an error
 		});
 
+	app_state.ligths = await fetch("/lights")
+		.then((response) => response.json()) // Parse response to JSON
+		.catch((error) => {
+			console.error("Error fetching lights:", error);
+			return []; // Fallback to an empty array if there's an error
+		});
+
+	console.log(app_state.ligths);
 	console.log(app_state.vehicles);
 
 	render(app_state.map, dataToGeoJSON(app_state.points, app_state.lines));
 	render_vehicles(app_state.map, app_state.vehicles);
+	render_lights(app_state.map, split_lights(app_state.ligths));
 
 	const fetch_loop = async () => {
 		app_state.vehicles = await fetch("/vehicles")

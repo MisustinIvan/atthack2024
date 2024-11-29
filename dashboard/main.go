@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	graphconvertor "optitraffic/graphConvertor"
 	graphdb "optitraffic/graphDB"
 	"optitraffic/node"
 	"optitraffic/templates"
@@ -81,6 +82,15 @@ func main() {
 		}
 
 		return c.Send([]byte(s))
+	})
+
+	app.Get("/lights", func(c *fiber.Ctx) error {
+		path, _ := graphconvertor.TurnGraphToGeoJSON(*tm.Graph)
+		path_s, err := path.ToJSON()
+		if err != nil {
+			return err
+		}
+		return c.Send([]byte(path_s))
 	})
 
 	app.Listen(":6969")
