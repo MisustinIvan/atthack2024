@@ -91,6 +91,7 @@ func (dao *SQLiteDAO) GetAllPaths() (gj.FeatureCollection[gj.Geometry], error) {
         lastLong, LastLat float64
         lastState, lastSize, lastCars int
     )
+    i = -1
     for out.Next() {
         if err := out.Scan(&currID, &lastLong, &LastLat, &lastState, &lastSize, &lastCars); err != nil {
             return nil, err
@@ -101,9 +102,9 @@ func (dao *SQLiteDAO) GetAllPaths() (gj.FeatureCollection[gj.Geometry], error) {
             coords = append(coords, [2]gj.Coordinate{})
             lastID = currID
             coordTupleIndex = 0
-        } else { coordTupleIndex++ }
+            i++
+        } else { coordTupleIndex = 1 }
         coords[i][coordTupleIndex] = gj.CreateCoordinate(lastLong, LastLat)
-        i++
     }
     if err := out.Err(); err != nil {
         return nil, err
