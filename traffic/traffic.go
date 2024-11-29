@@ -113,6 +113,7 @@ func (t *TrafficManager) VehiclesAsPoints() geojson.FeatureCollection[geojson.Fl
 
 // Updates the state of all vehicles on the graph
 func (t *TrafficManager) Update(dt float64) {
+	// updating of route
 	for _, v := range t.Vehicles {
 		// assign new random target to vehicle if arrived at target
 		if v.AtTarget() || v.Route == nil {
