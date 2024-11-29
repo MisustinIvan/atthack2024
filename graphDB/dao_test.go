@@ -45,7 +45,7 @@ func TestGetGraph(t *testing.T) {
     // act & assert
     _, err = dao.GetGraph()
     if err != nil {
-        t.Fail()
+        t.Error(err.Error())
     }
 
 }

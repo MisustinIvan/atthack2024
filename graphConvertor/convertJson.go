@@ -26,7 +26,7 @@ func TurnGraphToGeoJSON(graph node.Graph) (paths gj.FeatureCollection[gj.Geometr
     for _, parent := range graph.Nodes {
         lastNode = gj.CreatePoint(PosToCoord(parent.Pos))
         joints = append(joints, gj.WrapFeature(lastNode,
-            map[string]any{"id": parent.Id}))
+            map[string]any{"id": float64(parent.Id)}))
 
         for node, conn := range parent.Conns {
             lastConn, _ =  gj.CreateLineString(
@@ -35,9 +35,10 @@ func TurnGraphToGeoJSON(graph node.Graph) (paths gj.FeatureCollection[gj.Geometr
             lastFeat = gj.WrapFeature(
                 lastConn,
                 map[string]any{
-                    "state": conn.State,
-                    "size": conn.Size,
-                    "cars": conn.NCars})
+                    "state": float64(conn.State),
+                    "size": float64(conn.Size),
+                    "cars": float64(conn.NCars),
+                })
             paths = append(paths, lastFeat)
         }
     }
@@ -59,23 +60,22 @@ func GeoJSONToGraph(paths gj.FeatureCollection[gj.Geometry], joints gj.FeatureCo
     // collect relations
     rels := make(map[gj.Coordinate][]struct{
         Coordinate gj.Coordinate
-        State node.ConnState
-        Size, Cars int
+        State, Size, Cars float64
     })
     var (
         exists bool
         ends [2]gj.Coordinate
-        val struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}
+        val struct{Coordinate gj.Coordinate; State, Size, Cars float64}
     )
     for _, v := range geoPaths {
         ends = v.Ends
-        val = struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}{
-                ends[1], v.State, v.Size, v.Cars}
+        val = struct{Coordinate gj.Coordinate; State, Size, Cars float64}{
+                ends[1], float64(v.State), float64(v.Size), float64(v.Cars)}
         _, exists = rels[ends[0]]
         if exists {
             rels[ends[0]] = append(rels[ends[0]], val)
         } else {
-            rels[ends[0]] = []struct{Coordinate gj.Coordinate; State node.ConnState; Size, Cars int}{val}
+            rels[ends[0]] = []struct{Coordinate gj.Coordinate; State, Size, Cars float64}{val}
         }
     }
 
@@ -107,9 +107,9 @@ func GeoJSONToGraph(paths gj.FeatureCollection[gj.Geometry], joints gj.FeatureCo
             // asign
             connect[target] = node.ConnParams{
                 Dist: mainPos.DistanceTo(otherPos),
-                Size: inner.Size,
-                State: inner.State,
-                NCars: inner.Cars,
+                Size: int(inner.Size),
+                State: node.ConnState(inner.State),
+                NCars: int(inner.Cars),
             }
         }
         // assign conns
@@ -141,7 +141,7 @@ func PointToGeoNode(point gj.Feature[gj.FlatGeometry]) (GeoNode, error) {
 
 func (g GeoNode) ToPoint() gj.Feature[gj.FlatGeometry] {
     point := gj.CreatePoint(g.Coordinate)
-    return gj.WrapFeature(point, map[string]any{"id":g.Id})
+    return gj.WrapFeature(point, map[string]any{"id":float64(g.Id)})
 }
 
 func PointsCollToGeoNode(collOfPoints gj.FeatureCollection[gj.FlatGeometry]) ([]GeoNode, error) {
@@ -211,7 +211,7 @@ func LineStringToGeoPath(line gj.Feature[gj.Geometry]) (GeoPath, error) {
 
 func (g GeoPath) ToLineString() gj.Feature[gj.Geometry] {
     line, _ := gj.CreateLineString(g.Ends[0], g.Ends[1])
-    return gj.WrapFeature(line, map[string]any{"state": g.State, "size": g.Size, "cars": g.Cars})
+    return gj.WrapFeature(line, map[string]any{"state": float64(g.State), "size": float64(g.Size), "cars": float64(g.Cars)})
 }
 
 func LineCollToGeoPath(collOfLines gj.FeatureCollection[gj.Geometry]) ([]GeoPath, error) {
