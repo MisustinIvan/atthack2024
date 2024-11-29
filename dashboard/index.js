@@ -2,7 +2,9 @@ let app_state = {
 	map: {},
 	points: {},
 	lines: {},
-	geojson_layer: {},
+	vehicles: {},
+	geojson_map_layer: {},
+	geojson_vehicle_layer: {},
 };
 
 const MARKER_RADIUS = 8;
@@ -31,6 +33,7 @@ const dataToGeoJSON = (points, edges) => {
  * @returns {L.CircleMarker} - A Leaflet circle marker
  */
 const pointToLayer = (point, latlng) => {
+	console.log(point);
 	const marker = L.circleMarker(latlng, {
 		radius: MARKER_RADIUS,
 		color: "blue",
@@ -41,16 +44,37 @@ const pointToLayer = (point, latlng) => {
 	return marker;
 };
 
+const vehicleToLayer = (point, latlng) => {
+	console.log(point);
+	const marker = L.circleMarker(latlng, {
+		radius: MARKER_RADIUS,
+		color: "red",
+		weight: 2,
+		fillColor: "red",
+		fillOpacity: 0.5,
+	});
+	return marker;
+};
+
+const render_vehicles = (map, vehiclesGeoJSON) => {
+	if (app_state.geojson_vehicle_layer != {}) {
+		app_state.map.removeLayer(app_state.geojson_vehicle_layer);
+	}
+	app_state.geojson_vehicle_layer = L.geoJSON(vehiclesGeoJSON, {
+		pointToLayer: vehicleToLayer,
+	}).addTo(map);
+};
+
 /**
  * Renders GeoJSON data on the map
  * @param {L.Map} map - The Leaflet map instance
  * @param {Object} geoJSON - The GeoJSON data to render
  */
 const render = (map, geoJSON) => {
-	if (app_state.geojson_layer != {}) {
-		app_state.map.removeLayer(app_state.geojson_layer);
+	if (app_state.geojson_map_layer != {}) {
+		app_state.map.removeLayer(app_state.geojson_map_layer);
 	}
-	app_state.geojson_layer = L.geoJSON(geoJSON, {
+	app_state.geojson_map_layer = L.geoJSON(geoJSON, {
 		pointToLayer: pointToLayer,
 		onEachFeature: (feature, layer) => {
 			if (feature.properties && feature.properties.name) {
@@ -94,7 +118,17 @@ let main = async () => {
 			return []; // Fallback to an empty array if there's an error
 		});
 
+	app_state.vehicles = await fetch("/vehicles")
+		.then((response) => response.json()) // Parse response to JSON
+		.catch((error) => {
+			console.error("Error fetching vehicles:", error);
+			return []; // Fallback to an empty array if there's an error
+		});
+
+	console.log(app_state.vehicles);
+
 	render(app_state.map, dataToGeoJSON(app_state.points, app_state.lines));
+	render_vehicles(app_state.map, app_state.vehicles);
 };
 
 document.addEventListener("DOMContentLoaded", main);

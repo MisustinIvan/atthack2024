@@ -3,7 +3,9 @@ package main
 import (
 	"database/sql"
 	graphdb "optitraffic/graphDB"
+	"optitraffic/node"
 	"optitraffic/templates"
+	"optitraffic/traffic"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -18,6 +20,18 @@ func main() {
 	}
 	dao := graphdb.NewDAO(db)
 	app := fiber.New()
+
+	graph, err := dao.GetGraph()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tm := traffic.NewTrafficManager(&graph)
+
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
 
 	templates, err := templates.NewTemplates()
 	if err != nil {
@@ -53,7 +67,13 @@ func main() {
 	})
 
 	app.Get("/vehicles", func(c *fiber.Ctx) error {
-		return nil
+		fc := tm.VehiclesAsPoints()
+		s, err := fc.ToJSON()
+		if err != nil {
+			return err
+		}
+
+		return c.Send([]byte(s))
 	})
 
 	app.Listen(":6969")
