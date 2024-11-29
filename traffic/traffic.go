@@ -31,7 +31,7 @@ func NewTrafficManager(graph *node.Graph) TrafficManager {
 	}
 }
 
-func (tm *TrafficManager) NewRandomVehicle() {
+func (t *TrafficManager) NewRandomVehicle() {
 	i := int(rand.Float64() * float64(len(tm.Graph.Nodes)))
 	tm.Vehicles = append(tm.Vehicles, &Vehicle{
 		Id:       tm.vehicle_next_id,
@@ -61,9 +61,9 @@ func (v *Vehicle) AtTarget() bool {
 	return v.Target == v.At
 }
 
-func (tm *TrafficManager) RandomTarget(v *Vehicle) {
-	i := int(rand.Float64() * float64(len(tm.Graph.Nodes)))
-	v.Target = tm.Graph.Nodes[i]
+func (t *TrafficManager) RandomTarget(v *Vehicle) {
+	i := int(rand.Float64() * float64(len(t.Graph.Nodes)))
+	v.Target = t.Graph.Nodes[i]
 }
 
 func (t *TrafficManager) Update(dt float64) {
