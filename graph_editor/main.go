@@ -79,8 +79,6 @@ func main() {
 			return err
 		}
 
-		fmt.Printf("resp_points: %v\n", resp_points)
-
 		resp_nodes, err := graphconvertor.PointsCollToGeoNode(resp_points)
 		if err != nil {
 			return err
