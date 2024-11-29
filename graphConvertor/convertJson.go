@@ -47,7 +47,11 @@ func TurnGraphToGeoJSON(graph node.Graph) (paths gj.FeatureCollection[gj.Geometr
 
 
 func GeoJSONToGraph(paths gj.FeatureCollection[gj.Geometry], joints gj.FeatureCollection[gj.FlatGeometry]) (node.Graph, error) {
-    geoPaths, geoNodes := LineCollToGeoPath(paths), PointsCollToGeoNode(joints)
+    geoPaths := LineCollToGeoPath(paths)
+    geoNodes, e := PointsCollToGeoNode(joints)
+    if e != nil {
+        return *new(node.Graph), e
+    }
 
     // collect relations
     rels := make(map[gj.Coordinate][]struct{
@@ -137,7 +141,7 @@ func (g GeoNode) ToPoint() gj.Feature[gj.FlatGeometry] {
     return gj.WrapFeature(point, map[string]any{"id":g.Id})
 }
 
-func PointsCollToGeoNode(collOfPoints gj.FeatureCollection[gj.FlatGeometry]) []GeoNode {
+func PointsCollToGeoNode(collOfPoints gj.FeatureCollection[gj.FlatGeometry]) ([]GeoNode, error) {
     points := make([]GeoNode, 0, len(collOfPoints))
     var (
         lastN GeoNode
@@ -145,11 +149,12 @@ func PointsCollToGeoNode(collOfPoints gj.FeatureCollection[gj.FlatGeometry]) []G
     )
     for _, v := range collOfPoints {
         lastN, e = PointToGeoNode(v)
-        if e == nil {
-            points = append(points, lastN)
+        if e != nil {
+            return nil, e
         }
+        points = append(points, lastN)
     }
-    return points
+    return points, nil
 }
 
 func GeoNodesToPointsColl(nodes ...GeoNode) gj.FeatureCollection[gj.FlatGeometry] {

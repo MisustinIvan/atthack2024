@@ -36,6 +36,25 @@ func TestStoreGraph(t *testing.T) {
     }
 }
 
+func TestIndependent(t *testing.T) {
+	// Connect
+    db, err := sql.Open("sqlite3", "./test.db")
+    if err != nil {
+        t.Error(err.Error())
+    }
+    db.Exec("DELETE FROM graph_paths")
+    db.Exec("DELETE FROM path_ends")
+    db.Exec("DELETE FROM graph_nodes")
+    // dao := NewDAO(db)
+    // // Setup
+    // poses := [...]node.Pos{
+    //     {X: 0, Y: 50},
+    //     {X: 1, Y: 50},
+    //     {X: 1, Y: 51},
+    // }
+
+}
+
 func TestGetGraph(t *testing.T) {
     // Connect
     db, err := sql.Open("sqlite3", "./test.db")

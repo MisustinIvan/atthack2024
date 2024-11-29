@@ -127,7 +127,10 @@ func (dao *SQLiteDAO) StoreGraph(graph node.Graph) error {
     paths, points := conv.TurnGraphToGeoJSON(graph)
 
     // Extract nodes
-    pointArgs := conv.PointsCollToGeoNode(points)
+    pointArgs, err := conv.PointsCollToGeoNode(points)
+    if err != nil {
+        return err
+    }
     // Do the thingy
     if err := dao.StoreGeoNodes(pointArgs...); err != nil {
         return err
