@@ -98,7 +98,7 @@ func (t *TrafficManager) VehiclesAsPoints() geojson.FeatureCollection[geojson.Fl
 		res = append(res, geojson.Feature[geojson.FlatGeometry]{
 			Geometry: geojson.FlatGeometry{
 				GeometryType: geojson.PointT,
-				SingleCoords: [2]float64{pos.Y, pos.X},
+				SingleCoords: [2]float64{pos.X, pos.Y},
 			},
 			Props: map[string]any{
 				"type": v.Type,
