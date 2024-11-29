@@ -174,12 +174,6 @@ func (dao *SQLiteDAO) StoreGeoNodes(nodes ...conv.GeoNode) error {
 }
 
 func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
-    // get last id (to assign coords)
-    lastRow := dao.db.QueryRow("SELECT id FROM graph_paths ORDER BY id DESC")
-    var lastID int
-    if err := lastRow.Scan(&lastID); err != nil {
-        lastID = 0
-    }
     // prepare data query
     pathDataQuery := "INSERT INTO graph_paths (state, size, cars) VALUES\r\n"
     argLen := len(paths)
@@ -200,6 +194,12 @@ func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
         return err
     }
 
+    // get last id (to assign coords)
+    lastRow := dao.db.QueryRow("SELECT id FROM graph_paths ORDER BY id DESC")
+    var lastID int
+    if err := lastRow.Scan(&lastID); err != nil {
+       return err
+    }
     // prepare coordinates query
     pathCoordQuery := "INSERT INTO path_ends (parent_id, longitude, latitude) VALUES\r\n"
     coordLen := argLen*2
@@ -210,11 +210,12 @@ func (dao *SQLiteDAO) StoreGeoPaths(paths ...conv.GeoPath) error {
         pathCoordQuery = pathCoordQuery[:qLen-3]
     }
     // prepare coordinates data
+    currID := lastID - len(paths)
     pathTuples := make([]any, 0, coordLen)
     for _, v := range paths {
-        lastID++
-        pathTuples = append(pathTuples, lastID, v.Ends[0][0], v.Ends[0][1])
-        pathTuples = append(pathTuples, lastID, v.Ends[1][0], v.Ends[1][1])
+        currID++
+        pathTuples = append(pathTuples, currID, v.Ends[0][0], v.Ends[0][1])
+        pathTuples = append(pathTuples, currID, v.Ends[1][0], v.Ends[1][1])
     }
     // execute coordinates query
     _, err = dao.db.Exec(pathCoordQuery, pathTuples...)
