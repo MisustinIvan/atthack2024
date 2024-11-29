@@ -32,6 +32,12 @@ func main() {
 	tm.NewRandomVehicle(node.EmergencyVehicle)
 	tm.NewRandomVehicle(node.EmergencyVehicle)
 	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
+	tm.NewRandomVehicle(node.EmergencyVehicle)
 
 	templates, err := templates.NewTemplates()
 	if err != nil {
@@ -67,6 +73,7 @@ func main() {
 	})
 
 	app.Get("/vehicles", func(c *fiber.Ctx) error {
+		tm.Update(0.0001)
 		fc := tm.VehiclesAsPoints()
 		s, err := fc.ToJSON()
 		if err != nil {

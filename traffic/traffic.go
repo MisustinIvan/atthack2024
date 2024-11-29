@@ -58,16 +58,17 @@ func (t *TrafficManager) NewRandomVehicle(typ node.VehicleType) {
 }
 
 func (t *TrafficManager) Repath(v *Vehicle) error {
-	pf := &t.Pathfinder
+	pf := node.NewPathfinder(t.Graph)
 	newRoute, err := pf.Path(v.At, v.Target, v.Type)
 	if err != nil {
 		return err
 	}
+	v.Route = newRoute[1:]
 
-	delta := 1 - (node.PathWeightedLength(v.Route, v.Type) / node.PathWeightedLength(newRoute, v.Type))
-	if delta > min_delta_perc {
-		v.Route = newRoute[1:]
-	}
+	//delta := 1 - (node.PathWeightedLength(v.Route, v.Type) / node.PathWeightedLength(newRoute, v.Type))
+	//if delta > min_delta_perc {
+	//	v.Route = newRoute[1:]
+	//}
 	return nil
 }
 
@@ -86,9 +87,11 @@ func (v *Vehicle) InterpolatePos() node.Pos {
 	}
 
 	diff := v.At.Pos.Diff(v.Route[0].Pos)
-	diff.X *= v.Progress
-	diff.Y *= v.Progress
-	return diff
+
+	return node.Pos{
+		X: v.At.Pos.X - diff.X*v.Progress,
+		Y: v.At.Pos.Y - diff.Y*v.Progress,
+	}
 }
 
 func (t *TrafficManager) VehiclesAsPoints() geojson.FeatureCollection[geojson.FlatGeometry] {
@@ -117,7 +120,7 @@ func (t *TrafficManager) Update(dt float64) {
 				log.Printf("vehicle: %d arrived at target: %d", v.Id, v.Target.Id)
 			}
 			t.RandomTarget(v)
-			v.Progress = 0
+			v.Progress = 0.0
 			// create path based on situation
 			err := t.Repath(v)
 			if err != nil {
@@ -130,12 +133,14 @@ func (t *TrafficManager) Update(dt float64) {
 			dist := v.At.Pos.DistanceTo(v.Target.Pos)
 			v.Progress += v.Speed * dt / dist
 			if v.Progress >= 1.0 {
+				v.Progress = 0.0
 				v.At = v.Target
 			}
 		} else if len(v.Route) > 0 {
 			dist := v.At.Pos.DistanceTo(v.Route[0].Pos)
 			v.Progress += v.Speed * dt / dist
 			if v.Progress >= 1.0 {
+				v.Progress = 0.0
 				v.At = v.Route[0]
 				err := t.Repath(v)
 				if err != nil {

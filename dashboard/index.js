@@ -129,6 +129,19 @@ let main = async () => {
 
 	render(app_state.map, dataToGeoJSON(app_state.points, app_state.lines));
 	render_vehicles(app_state.map, app_state.vehicles);
+
+	const fetch_loop = async () => {
+		app_state.vehicles = await fetch("/vehicles")
+			.then((response) => response.json()) // Parse response to JSON
+			.catch((error) => {
+				console.error("Error fetching vehicles:", error);
+				return []; // Fallback to an empty array if there's an error
+			});
+		render_vehicles(app_state.map, app_state.vehicles);
+
+		setTimeout(fetch_loop, 100);
+	};
+	fetch_loop();
 };
 
 document.addEventListener("DOMContentLoaded", main);
