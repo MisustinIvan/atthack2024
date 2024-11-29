@@ -8,11 +8,11 @@ import (
 	"optitraffic/pqueue"
 )
 
-type VehicleType int
+type VehicleType string
 
 const (
-    NormalVehicle VehicleType = iota
-    EmergencyVehicle
+    NormalVehicle VehicleType = "normal"
+    EmergencyVehicle VehicleType = "priority"
 )
 
 type Pathfinder struct {
