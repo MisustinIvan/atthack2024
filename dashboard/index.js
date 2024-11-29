@@ -84,11 +84,12 @@ const render = (map, geoJSON) => {
     }).addTo(map);
 };
 
-const magicShiftPercent = 0.05
+const magicShift = 0.05
 const interpolPos = (coordsSource, coordsDest) => {
     let horizontalDis = coordsSource[0] - coordsDest[0]
     let verticalDis = coordsSource[1] - coordsDest[1]
-    return [coordsDest[0] + horizontalDis*magicShiftPercent, coordsDest[1] + verticalDis*magicShiftPercent]
+    let dalka = Math.sqrt(horizontalDis*horizontalDis + verticalDis*verticalDis)
+    return [coordsDest[0] + magicShift*horizontalDis/dalka, coordsDest[1] + magicShift*verticalDis/dalka]
 }
 
 const split_lights = (fc) => {
