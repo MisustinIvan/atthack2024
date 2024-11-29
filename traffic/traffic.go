@@ -32,17 +32,17 @@ func NewTrafficManager(graph *node.Graph) TrafficManager {
 }
 
 func (t *TrafficManager) NewRandomVehicle() {
-	i := int(rand.Float64() * float64(len(tm.Graph.Nodes)))
-	tm.Vehicles = append(tm.Vehicles, &Vehicle{
-		Id:       tm.vehicle_next_id,
+	i := int(rand.Float64() * float64(len(t.Graph.Nodes)))
+	t.Vehicles = append(t.Vehicles, &Vehicle{
+		Id:       t.vehicle_next_id,
 		Speed:    vehicle_speed,
 		Target:   nil,
-		At:       tm.Graph.Nodes[i],
+		At:       t.Graph.Nodes[i],
 		Progress: 0,
 		Route:    nil,
 	})
 
-	tm.vehicle_next_id += 1
+	t.vehicle_next_id += 1
 }
 
 func (t *TrafficManager) Repath(v *Vehicle) error {
